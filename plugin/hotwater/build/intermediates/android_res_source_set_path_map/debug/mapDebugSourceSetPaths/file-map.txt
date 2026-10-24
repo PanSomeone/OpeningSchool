@@ -1,0 +1,9 @@
+com.openschedule.plugin.hotwater-pngs-0 D:\file\code\project\OpeningSchool\plugin\hotwater\build\generated\res\pngs\debug
+com.openschedule.plugin.hotwater-updated_navigation_xml-1 D:\file\code\project\OpeningSchool\plugin\hotwater\build\generated\updated_navigation_xml\debug
+com.openschedule.plugin.hotwater-mergeDebugResources-2 D:\file\code\project\OpeningSchool\plugin\hotwater\build\intermediates\incremental\debug\mergeDebugResources\merged.dir
+com.openschedule.plugin.hotwater-mergeDebugResources-3 D:\file\code\project\OpeningSchool\plugin\hotwater\build\intermediates\incremental\debug\mergeDebugResources\stripped.dir
+com.openschedule.plugin.hotwater-debug-4 D:\file\code\project\OpeningSchool\plugin\hotwater\build\intermediates\merged_res\debug\mergeDebugResources
+com.openschedule.plugin.hotwater-debug-5 D:\file\code\project\OpeningSchool\plugin\hotwater\build\intermediates\packaged_res\debug\packageDebugResources
+com.openschedule.plugin.hotwater-debug-6 D:\file\code\project\OpeningSchool\plugin\hotwater\src\debug\res
+com.openschedule.plugin.hotwater-main-7 D:\file\code\project\OpeningSchool\plugin\hotwater\src\main\res
+gradleHome-0 C:\Users\Administrator\.gradle

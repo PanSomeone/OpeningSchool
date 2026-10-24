@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.openschedule.plugin.scores.GradeParserTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2026-10-24T17:11:47.619Z" hostname="WIN-KRVPD89C489" time="0.127">
+  <properties/>
+  <testcase name="failsWhenThereIsNoGradeTable" classname="com.openschedule.plugin.scores.GradeParserTest" time="0.082"/>
+  <testcase name="failsWhenOnlyLevelGradesExist" classname="com.openschedule.plugin.scores.GradeParserTest" time="0.009"/>
+  <testcase name="parsesZhengfangGradeTable" classname="com.openschedule.plugin.scores.GradeParserTest" time="0.008"/>
+  <testcase name="parsesJsonGradePayload" classname="com.openschedule.plugin.scores.GradeParserTest" time="0.02"/>
+  <testcase name="ignoresGradePointColumnWhenItIsNotCredit" classname="com.openschedule.plugin.scores.GradeParserTest" time="0.002"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,9 @@
+com.openschedule.feature.plugins-pngs-0 D:\file\code\project\OpeningSchool\feature\plugins\build\generated\res\pngs\debug
+com.openschedule.feature.plugins-updated_navigation_xml-1 D:\file\code\project\OpeningSchool\feature\plugins\build\generated\updated_navigation_xml\debug
+com.openschedule.feature.plugins-mergeDebugResources-2 D:\file\code\project\OpeningSchool\feature\plugins\build\intermediates\incremental\debug\mergeDebugResources\merged.dir
+com.openschedule.feature.plugins-mergeDebugResources-3 D:\file\code\project\OpeningSchool\feature\plugins\build\intermediates\incremental\debug\mergeDebugResources\stripped.dir
+com.openschedule.feature.plugins-debug-4 D:\file\code\project\OpeningSchool\feature\plugins\build\intermediates\merged_res\debug\mergeDebugResources
+com.openschedule.feature.plugins-debug-5 D:\file\code\project\OpeningSchool\feature\plugins\build\intermediates\packaged_res\debug\packageDebugResources
+com.openschedule.feature.plugins-debug-6 D:\file\code\project\OpeningSchool\feature\plugins\src\debug\res
+com.openschedule.feature.plugins-main-7 D:\file\code\project\OpeningSchool\feature\plugins\src\main\res
+gradleHome-0 C:\Users\Administrator\.gradle

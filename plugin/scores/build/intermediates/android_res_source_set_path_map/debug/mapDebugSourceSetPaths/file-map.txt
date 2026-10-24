@@ -1,0 +1,9 @@
+com.openschedule.plugin.scores-pngs-0 D:\file\code\project\OpeningSchool\plugin\scores\build\generated\res\pngs\debug
+com.openschedule.plugin.scores-updated_navigation_xml-1 D:\file\code\project\OpeningSchool\plugin\scores\build\generated\updated_navigation_xml\debug
+com.openschedule.plugin.scores-mergeDebugResources-2 D:\file\code\project\OpeningSchool\plugin\scores\build\intermediates\incremental\debug\mergeDebugResources\merged.dir
+com.openschedule.plugin.scores-mergeDebugResources-3 D:\file\code\project\OpeningSchool\plugin\scores\build\intermediates\incremental\debug\mergeDebugResources\stripped.dir
+com.openschedule.plugin.scores-debug-4 D:\file\code\project\OpeningSchool\plugin\scores\build\intermediates\merged_res\debug\mergeDebugResources
+com.openschedule.plugin.scores-debug-5 D:\file\code\project\OpeningSchool\plugin\scores\build\intermediates\packaged_res\debug\packageDebugResources
+com.openschedule.plugin.scores-debug-6 D:\file\code\project\OpeningSchool\plugin\scores\src\debug\res
+com.openschedule.plugin.scores-main-7 D:\file\code\project\OpeningSchool\plugin\scores\src\main\res
+gradleHome-0 C:\Users\Administrator\.gradle

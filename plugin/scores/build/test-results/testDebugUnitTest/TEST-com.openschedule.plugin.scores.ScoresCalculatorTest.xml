@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.openschedule.plugin.scores.ScoresCalculatorTest" tests="8" skipped="0" failures="0" errors="0" timestamp="2026-10-24T17:11:47.749Z" hostname="WIN-KRVPD89C489" time="0.007">
+  <properties/>
+  <testcase name="graduationUsesSeniorHalfAndPreviousAverage" classname="com.openschedule.plugin.scores.ScoresCalculatorTest" time="0.002"/>
+  <testcase name="groupsResultsByTerm" classname="com.openschedule.plugin.scores.ScoresCalculatorTest" time="0.002"/>
+  <testcase name="mapsScoresToGradePoints" classname="com.openschedule.plugin.scores.ScoresCalculatorTest" time="0.0"/>
+  <testcase name="peWeightsAddToHundredAndBonusCapsAtTwenty" classname="com.openschedule.plugin.scores.ScoresCalculatorTest" time="0.001"/>
+  <testcase name="excludedCoursesDoNotCount" classname="com.openschedule.plugin.scores.ScoresCalculatorTest" time="0.0"/>
+  <testcase name="emptyGpaIsZero" classname="com.openschedule.plugin.scores.ScoresCalculatorTest" time="0.0"/>
+  <testcase name="peGradesFollowOfficialThresholds" classname="com.openschedule.plugin.scores.ScoresCalculatorTest" time="0.0"/>
+  <testcase name="calculatesCreditWeightedGpa" classname="com.openschedule.plugin.scores.ScoresCalculatorTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

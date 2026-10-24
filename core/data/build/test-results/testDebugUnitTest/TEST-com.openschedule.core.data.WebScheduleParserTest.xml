@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.openschedule.core.data.WebScheduleParserTest" tests="7" skipped="0" failures="0" errors="0" timestamp="2026-10-24T16:58:59.535Z" hostname="WIN-KRVPD89C489" time="0.206">
+  <properties/>
+  <testcase name="parsesZhengfangTable" classname="com.openschedule.core.data.WebScheduleParserTest" time="0.159"/>
+  <testcase name="picksTheTableWithMoreCourses" classname="com.openschedule.core.data.WebScheduleParserTest" time="0.004"/>
+  <testcase name="infersSemesterStartFromCurrentWeek" classname="com.openschedule.core.data.WebScheduleParserTest" time="0.004"/>
+  <testcase name="failsWhenNoTableIsPresent" classname="com.openschedule.core.data.WebScheduleParserTest" time="0.002"/>
+  <testcase name="expandsRowSpanIntoSeveralPeriods" classname="com.openschedule.core.data.WebScheduleParserTest" time="0.003"/>
+  <testcase name="parsesEmbeddedKbListJson" classname="com.openschedule.core.data.WebScheduleParserTest" time="0.023"/>
+  <testcase name="parsesTransposedTable" classname="com.openschedule.core.data.WebScheduleParserTest" time="0.005"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

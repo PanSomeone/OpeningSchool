@@ -1,0 +1,8 @@
+com.openschedule.app-pngs-0 D:\file\code\project\OpeningSchool\app\build\generated\res\pngs\debug
+com.openschedule.app-updated_navigation_xml-1 D:\file\code\project\OpeningSchool\app\build\generated\updated_navigation_xml\debug
+com.openschedule.app-packageDebugResources-2 D:\file\code\project\OpeningSchool\app\build\intermediates\incremental\debug\packageDebugResources\merged.dir
+com.openschedule.app-packageDebugResources-3 D:\file\code\project\OpeningSchool\app\build\intermediates\incremental\debug\packageDebugResources\stripped.dir
+com.openschedule.app-debug-4 D:\file\code\project\OpeningSchool\app\build\intermediates\merged_res\debug\mergeDebugResources
+com.openschedule.app-debug-5 D:\file\code\project\OpeningSchool\app\src\debug\res
+com.openschedule.app-main-6 D:\file\code\project\OpeningSchool\app\src\main\res
+gradleHome-0 C:\Users\Administrator\.gradle

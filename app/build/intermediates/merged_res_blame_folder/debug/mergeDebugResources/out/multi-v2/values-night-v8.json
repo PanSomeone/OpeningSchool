@@ -1,0 +1,38 @@
+{
+    "logs": [
+        {
+            "outputFile": "com.openschedule.app-mergeDebugResources-34:/values-night-v8/values-night-v8.xml",
+            "map": [
+                {
+                    "source": "D:\\file\\code\\project\\OpeningSchool\\app\\src\\main\\res\\values-night\\themes.xml",
+                    "from": {
+                        "startLines": "2",
+                        "startColumns": "4",
+                        "startOffsets": "55",
+                        "endLines": "8",
+                        "endColumns": "12",
+                        "endOffsets": "513"
+                    },
+                    "to": {
+                        "startLines": "3",
+                        "startColumns": "4",
+                        "startOffsets": "107",
+                        "endLines": "9",
+                        "endColumns": "12",
+                        "endOffsets": "565"
+                    }
+                },
+                {
+                    "source": "D:\\file\\code\\project\\OpeningSchool\\app\\src\\main\\res\\values-night\\colors.xml",
+                    "from": {
+                        "startLines": "2",
+                        "startColumns": "4",
+                        "startOffsets": "55",
+                        "endColumns": "51",
+                        "endOffsets": "102"
+                    }
+                }
+            ]
+        }
+    ]
+}
