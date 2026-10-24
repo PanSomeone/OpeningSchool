@@ -2,6 +2,7 @@ package com.openschedule.feature.timetable
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.openschedule.core.data.AppLog
 import com.openschedule.core.data.ExternalAdapterCatalog
 import com.openschedule.core.data.SettingsStore
 import com.openschedule.core.data.TimetableStore
@@ -294,6 +295,7 @@ class TimetableViewModel(
         viewModelScope.launch {
             when (val result = importer.import(config)) {
                 is ImportResult.Success -> {
+                    AppLog.i("Import", "${importer.name} 识别 ${result.timetable.courses.size} 门课")
                     _pendingImport.value = ImportPreview(
                         timetable = result.timetable,
                         warnings = result.warnings.filter { it.isNotBlank() },
@@ -301,7 +303,10 @@ class TimetableViewModel(
                     )
                 }
 
-                is ImportResult.Failure -> _error.value = result.message
+                is ImportResult.Failure -> {
+                    AppLog.w("Import", "${importer.name} 失败: ${result.message}")
+                    _error.value = result.message
+                }
             }
             _importing.value = false
         }
@@ -317,13 +322,20 @@ class TimetableViewModel(
             }
             result.fold(
                 onSuccess = { parsed ->
+                    AppLog.i(
+                        "Import",
+                        "网页 $source: ${pages.size} 页, ${parsed.timetable.courses.size} 门课, ${parsed.warnings.size} 条提示",
+                    )
                     _pendingImport.value = ImportPreview(
                         timetable = parsed.timetable,
                         warnings = parsed.warnings,
                         source = source,
                     )
                 },
-                onFailure = { _error.value = it.message ?: "没有从页面里识别出课表" },
+                onFailure = {
+                    AppLog.w("Import", "网页 $source 解析失败: ${it.message}")
+                    _error.value = it.message ?: "没有从页面里识别出课表"
+                },
             )
             _importing.value = false
         }
@@ -336,6 +348,10 @@ class TimetableViewModel(
         } else {
             timetableStore.save(preview.timetable.copy(id = timetableStore.active.id))
         }
+        AppLog.i(
+            "Import",
+            (if (createNew) "新建课表" else "替换当前课表") + " · ${preview.timetable.courses.size} 门课",
+        )
         _week.value = currentWeek()
         _message.value = "已导入 ${preview.timetable.courses.size} 门课"
         _pendingImport.value = null
@@ -353,11 +369,15 @@ class TimetableViewModel(
         val result = timetableStore.replaceFromJson(raw)
         return result.fold(
             onSuccess = {
+                AppLog.i("Backup", "JSON 恢复 ${it.courses.size} 门课")
                 _week.value = currentWeek()
                 _message.value = "已从 JSON 恢复 ${it.courses.size} 门课"
                 null
             },
-            onFailure = { it.message ?: "JSON 无法解析" },
+            onFailure = {
+                AppLog.w("Backup", "JSON 恢复失败: ${it.message}")
+                it.message ?: "JSON 无法解析"
+            },
         )
     }
 

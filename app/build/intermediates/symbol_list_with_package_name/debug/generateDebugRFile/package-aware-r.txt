@@ -1,7 +1,0 @@
-com.openschedule
-color launcher_background
-color window_background
-drawable ic_launcher_foreground
-mipmap ic_launcher
-string app_name
-style Theme_OpenSchedule

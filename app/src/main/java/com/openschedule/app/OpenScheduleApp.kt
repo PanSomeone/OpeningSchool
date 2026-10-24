@@ -3,6 +3,7 @@ package com.openschedule.app
 import android.app.Application
 import android.content.Context
 import com.openschedule.adapter.zhengfang.ZhengfangImporter
+import com.openschedule.core.data.AppLog
 import com.openschedule.core.data.ExternalAdapterCatalog
 import com.openschedule.core.data.SettingsStore
 import com.openschedule.core.data.TimetableStore
@@ -15,6 +16,7 @@ class OpenScheduleApp : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        AppLog.install(this)
         graph = AppGraph(this)
     }
 }

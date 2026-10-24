@@ -1,9 +1,0 @@
-com.openschedule.core.plugin.plugin-api-pngs-0 D:\file\code\project\OpeningSchool\core\plugin-api\build\generated\res\pngs\debug
-com.openschedule.core.plugin.plugin-api-updated_navigation_xml-1 D:\file\code\project\OpeningSchool\core\plugin-api\build\generated\updated_navigation_xml\debug
-com.openschedule.core.plugin.plugin-api-mergeDebugResources-2 D:\file\code\project\OpeningSchool\core\plugin-api\build\intermediates\incremental\debug\mergeDebugResources\merged.dir
-com.openschedule.core.plugin.plugin-api-mergeDebugResources-3 D:\file\code\project\OpeningSchool\core\plugin-api\build\intermediates\incremental\debug\mergeDebugResources\stripped.dir
-com.openschedule.core.plugin.plugin-api-debug-4 D:\file\code\project\OpeningSchool\core\plugin-api\build\intermediates\merged_res\debug\mergeDebugResources
-com.openschedule.core.plugin.plugin-api-debug-5 D:\file\code\project\OpeningSchool\core\plugin-api\build\intermediates\packaged_res\debug\packageDebugResources
-com.openschedule.core.plugin.plugin-api-debug-6 D:\file\code\project\OpeningSchool\core\plugin-api\src\debug\res
-com.openschedule.core.plugin.plugin-api-main-7 D:\file\code\project\OpeningSchool\core\plugin-api\src\main\res
-gradleHome-0 C:\Users\Administrator\.gradle

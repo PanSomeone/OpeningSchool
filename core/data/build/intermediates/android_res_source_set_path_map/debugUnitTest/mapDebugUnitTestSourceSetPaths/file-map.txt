@@ -1,4 +1,0 @@
-com.openschedule.core.data.test.data-mergeDebugUnitTestResources-0 D:\file\code\project\OpeningSchool\core\data\build\intermediates\incremental\debugUnitTest\mergeDebugUnitTestResources\merged.dir
-com.openschedule.core.data.test.data-mergeDebugUnitTestResources-1 D:\file\code\project\OpeningSchool\core\data\build\intermediates\incremental\debugUnitTest\mergeDebugUnitTestResources\stripped.dir
-com.openschedule.core.data.test.data-debugUnitTest-2 D:\file\code\project\OpeningSchool\core\data\build\intermediates\merged_res\debugUnitTest\mergeDebugUnitTestResources
-gradleHome-0 C:\Users\Administrator\.gradle

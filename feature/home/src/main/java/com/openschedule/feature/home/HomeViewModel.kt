@@ -2,6 +2,7 @@ package com.openschedule.feature.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.openschedule.core.data.AppLog
 import com.openschedule.core.data.TimetableStore
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -64,7 +65,10 @@ class HomeViewModel(
         viewModelScope.launch {
             runCatching { withContext(Dispatchers.IO) { fetchWeather() } }
                 .onSuccess { _weather.value = it }
-                .onFailure { _weatherError.value = "天气暂不可用" }
+                .onFailure {
+                    AppLog.w("Weather", "刷新失败: ${it.message}")
+                    _weatherError.value = "天气暂不可用"
+                }
             _loadingWeather.value = false
         }
     }

@@ -2,6 +2,10 @@
 
 模块化 Android 应用。主页可以进入所有功能，其余能力以插件形式安装、移除和单独设置；第三方可以通过独立 APK 提供教务适配器。
 
+> 当前测试版：`1.0.0-beta1`（versionCode 2），发布包使用独立 release 密钥签名。
+>
+> 仓库：[PanSomeone/OpeningSchool](https://github.com/PanSomeone/OpeningSchool) · [问题反馈](https://github.com/PanSomeone/OpeningSchool/issues) · [版本发布](https://github.com/PanSomeone/OpeningSchool/releases)
+
 ## 功能
 
 - 主页：2 列组件画布，默认 4 行（8 格），可加到 12 行（24 格）；组件支持 1×1、2×1、1×2、2×2，可添加、移除、长按拖动、留空。文件夹组件可装多个功能并自定义名称；内置天气、今日课程、日期、文件夹，插件提供热水和 GPA 组件；天气卡片可打开天气详情页
@@ -18,6 +22,7 @@
 - 成绩插件：GPA 先展示逐门成绩，勾选是否计入，点击「计算 GPA」后显示总体与每学期统计；可从教务成绩页登录后抓取成绩。另含体测标准分、加分、等级与毕业总评
 - 热水插件：手机号 + 验证码登录、设备列表、开关水、设备绑定；主页有快捷开关组件
 - 设置：主题、壁纸、导航、透明度，以及关于页（作者 PanSomeone、版本号、检查更新、赞助）
+- 反馈与日志：反馈入口可打开仓库 Issues；导出日志会生成带版本、机型、系统与最近运行记录的文件，崩溃记录也会保留
 
 ## 构建与测试
 
@@ -25,10 +30,13 @@
 
 ```bash
 ./gradlew :app:assembleDebug
-./gradlew testDebugUnitTest
+./gradlew :app:assembleRelease
+./gradlew test
 ```
 
-产物：`app/build/outputs/apk/debug/app-debug.apk`
+- Debug 产物：`app/build/outputs/apk/debug/app-debug.apk`
+- Release 产物：`app/build/outputs/apk/release/app-release.apk`
+- Release 签名读取根目录 `keystore.properties`（以及其中的 jks 路径）；这两个文件已被 `.gitignore` 排除，请自行备份，后续升级必须使用同一密钥。
 
 ## 模块
 
@@ -54,6 +62,7 @@
 - GPA 课程与计入开关：SharedPreferences（`openschedule_scores`）
 - 课表插件背景图：`filesDir/background_*.img`
 - 全局/页面壁纸：`filesDir/wallpaper_*.img`
+- 运行日志：`filesDir/logs/app.log`（超过 256 KB 轮转为 `app.log.1`）；导出文件写入 `cacheDir/logs/`，由系统分享面板交给用户选择去向
 
 ## 教务网页导入
 
@@ -99,9 +108,9 @@
 
 ## 热水插件
 
-由 `D:\798QuSiBa` 移植，仅作个人学习使用：
+由 `D:\798QuSiBa` 移植：
 
-- 不发布、不分发、不商用；只调用官方 App 已在用的接口，不绕过付费、不伪造凭证、不攻击服务器。
+- 只调用官方 App 已在用的接口，不绕过付费、不伪造凭证、不攻击服务器；请仅操作本人有权使用的设备。
 - 不复用官方 App 的 `cid`；每次安装生成独立的客户端 ID。
 - 不保存密码；令牌存在本机 SharedPreferences。
 - 不支持相机扫码，设备绑定通过手输设备码 / 二维码内容完成。
@@ -135,6 +144,8 @@
 
 - 作者：PanSomeone。
 - 版本号从 APK 的 `versionName` 读取。
+- 设置 →「反馈与日志」→「反馈」直接打开 [仓库 Issues](https://github.com/PanSomeone/OpeningSchool/issues)。
+- 「导出日志」生成 `OpeningSchool-时间.txt` 并通过系统分享；文件包含应用版本、包名、设备、Android 版本、ABI、区域和最近日志（含崩溃堆栈），不包含账号密码。
 - 「检查更新」和「赞助」入口已放好；更新仓库和赞助页链接暂未配置，点击会显示占位提示，后续在 `feature/settings/SettingsScreen.kt` 顶部的 `UPDATE_URL` / `SPONSOR_URL` 接入。
 
 ## 参考

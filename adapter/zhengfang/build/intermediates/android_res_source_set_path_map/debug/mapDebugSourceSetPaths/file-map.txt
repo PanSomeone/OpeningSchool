@@ -1,9 +1,0 @@
-com.openschedule.adapter.zhengfang-pngs-0 D:\file\code\project\OpeningSchool\adapter\zhengfang\build\generated\res\pngs\debug
-com.openschedule.adapter.zhengfang-updated_navigation_xml-1 D:\file\code\project\OpeningSchool\adapter\zhengfang\build\generated\updated_navigation_xml\debug
-com.openschedule.adapter.zhengfang-mergeDebugResources-2 D:\file\code\project\OpeningSchool\adapter\zhengfang\build\intermediates\incremental\debug\mergeDebugResources\merged.dir
-com.openschedule.adapter.zhengfang-mergeDebugResources-3 D:\file\code\project\OpeningSchool\adapter\zhengfang\build\intermediates\incremental\debug\mergeDebugResources\stripped.dir
-com.openschedule.adapter.zhengfang-debug-4 D:\file\code\project\OpeningSchool\adapter\zhengfang\build\intermediates\merged_res\debug\mergeDebugResources
-com.openschedule.adapter.zhengfang-debug-5 D:\file\code\project\OpeningSchool\adapter\zhengfang\build\intermediates\packaged_res\debug\packageDebugResources
-com.openschedule.adapter.zhengfang-debug-6 D:\file\code\project\OpeningSchool\adapter\zhengfang\src\debug\res
-com.openschedule.adapter.zhengfang-main-7 D:\file\code\project\OpeningSchool\adapter\zhengfang\src\main\res
-gradleHome-0 C:\Users\Administrator\.gradle

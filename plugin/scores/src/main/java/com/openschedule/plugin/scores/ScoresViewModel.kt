@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.openschedule.core.data.AppLog
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -95,8 +96,14 @@ internal class ScoresViewModel(
         viewModelScope.launch {
             val result = withContext(Dispatchers.Default) { GradeParser.parsePages(pages) }
             result.fold(
-                onSuccess = { _pendingGrades.value = it },
-                onFailure = { _gradeError.value = it.message ?: "成绩解析失败" },
+                onSuccess = {
+                    AppLog.i("Grades", "识别 ${it.courses.size} 门成绩, 跳过 ${it.skippedLevel} 门等级制")
+                    _pendingGrades.value = it
+                },
+                onFailure = {
+                    AppLog.w("Grades", "成绩解析失败: ${it.message}")
+                    _gradeError.value = it.message ?: "成绩解析失败"
+                },
             )
             _gradeImporting.value = false
         }
@@ -115,6 +122,7 @@ internal class ScoresViewModel(
         store.save(next)
         _courses.value = next
         val added = next.size - existing.size
+        AppLog.i("Grades", "${if (replace) "替换" else "追加"}成绩 · 新增 $added 门")
         _pendingGrades.value = null
         _message.value = buildString {
             append("已导入 $added 门课")

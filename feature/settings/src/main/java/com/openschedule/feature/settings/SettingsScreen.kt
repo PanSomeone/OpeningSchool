@@ -22,7 +22,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BrightnessAuto
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Feedback
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Favorite
@@ -50,13 +52,16 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.core.content.FileProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.openschedule.core.data.AppLog
 import com.openschedule.core.model.MAX_NAV_SLOTS
 import com.openschedule.core.model.NavSlot
 import com.openschedule.core.model.ThemeMode
@@ -66,6 +71,9 @@ import com.openschedule.core.ui.NavIcons
 import com.openschedule.core.ui.ScreenHeader
 import com.openschedule.core.ui.SectionTitle
 import com.openschedule.core.ui.SettingsCard
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlin.math.roundToInt
 
 @Composable
@@ -87,6 +95,8 @@ fun SettingsScreen(
     var renaming by remember { mutableStateOf<NavSlot?>(null) }
     var aboutDialog by remember { mutableStateOf<AboutDialog?>(null) }
     var showWallpaper by remember { mutableStateOf(false) }
+    var exportingLog by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
     val wallpaperStatus = when {
         settings.pageWallpapers.isNotEmpty() && settings.appWallpaper != null ->
             "全局 + ${settings.pageWallpapers.size} 页"
@@ -285,6 +295,71 @@ fun SettingsScreen(
                 }
                 }
 
+            SectionTitle("反馈与日志")
+            SettingsCard {
+                AboutRow(
+                    icon = Icons.Filled.Feedback,
+                    title = "反馈",
+                    value = if (FEEDBACK_URL.isBlank()) "未配置" else "GitHub Issues",
+                    onClick = {
+                        if (FEEDBACK_URL.isBlank()) {
+                            aboutDialog = AboutDialog.FEEDBACK
+                        } else {
+                            val opened = runCatching {
+                                context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(FEEDBACK_URL)))
+                            }.isSuccess
+                            if (!opened) {
+                                scope.launch { snackbar.showSnackbar("没有可用的浏览器") }
+                            }
+                        }
+                    },
+                )
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                AboutRow(
+                    icon = Icons.Filled.Description,
+                    title = "导出日志",
+                    value = if (exportingLog) "正在导出" else null,
+                    onClick = {
+                        if (!exportingLog) {
+                            exportingLog = true
+                            scope.launch {
+                                val file = withContext(Dispatchers.IO) {
+                                    runCatching { AppLog.export(context) }.getOrNull()
+                                }
+                                if (file == null) {
+                                    exportingLog = false
+                                    snackbar.showSnackbar("日志导出失败")
+                                    return@launch
+                                }
+                                AppLog.i("Settings", "导出日志 ${file.name}")
+                                val uri = runCatching {
+                                    FileProvider.getUriForFile(
+                                        context,
+                                        "${context.packageName}.fileprovider",
+                                        file,
+                                    )
+                                }.getOrNull()
+                                exportingLog = false
+                                if (uri == null) {
+                                    snackbar.showSnackbar("日志导出失败")
+                                    return@launch
+                                }
+                                val send = Intent(Intent.ACTION_SEND).apply {
+                                    type = "text/plain"
+                                    putExtra(Intent.EXTRA_STREAM, uri)
+                                    putExtra(Intent.EXTRA_SUBJECT, "开源大学运行日志")
+                                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                }
+                                val opened = runCatching {
+                                    context.startActivity(Intent.createChooser(send, "分享日志"))
+                                }.isSuccess
+                                if (!opened) snackbar.showSnackbar("没有可用的分享应用")
+                            }
+                        }
+                    },
+                )
+            }
+
             SectionTitle("关于")
             SettingsCard {
                 Row(
@@ -382,6 +457,7 @@ fun SettingsScreen(
                     when (dialog) {
                         AboutDialog.UPDATE -> "检查更新"
                         AboutDialog.SPONSOR -> "赞助开源大学"
+                        AboutDialog.FEEDBACK -> "反馈"
                     },
                 )
             },
@@ -390,6 +466,7 @@ fun SettingsScreen(
                     when (dialog) {
                         AboutDialog.UPDATE -> "更新地址尚未配置；代码仓库建立后会接入。"
                         AboutDialog.SPONSOR -> "赞助方式即将补充，感谢支持开源大学。"
+                        AboutDialog.FEEDBACK -> "反馈地址尚未配置；配置代码仓库后可直接打开 Issues。"
                     },
                 )
             },
@@ -400,7 +477,7 @@ fun SettingsScreen(
     }
 }
 
-private enum class AboutDialog { UPDATE, SPONSOR }
+private enum class AboutDialog { UPDATE, SPONSOR, FEEDBACK }
 
 @Composable
 private fun AboutRow(
@@ -456,12 +533,15 @@ private fun appVersionName(context: Context): String = runCatching {
         context.packageManager.getPackageInfo(context.packageName, 0)
     }
     info.versionName
-}.getOrNull().orEmpty().ifBlank { "1.0.0" }
+}.getOrNull().orEmpty().ifBlank { "1.0.0-beta1" }
 
 private const val AUTHOR = "PanSomeone"
 
-/** Set when the repository exists. */
-private const val UPDATE_URL = ""
+/** Set to the repository releases page. */
+private const val UPDATE_URL = "https://github.com/PanSomeone/OpeningSchool/releases"
+
+/** Set to the repository issues page. */
+private const val FEEDBACK_URL = "https://github.com/PanSomeone/OpeningSchool/issues"
 
 /** Set to a sponsorship page when available. */
 private const val SPONSOR_URL = ""

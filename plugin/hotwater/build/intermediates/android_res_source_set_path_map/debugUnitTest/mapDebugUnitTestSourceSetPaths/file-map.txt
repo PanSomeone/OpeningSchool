@@ -1,4 +1,0 @@
-com.openschedule.plugin.hotwater.test.hotwater-mergeDebugUnitTestResources-0 D:\file\code\project\OpeningSchool\plugin\hotwater\build\intermediates\incremental\debugUnitTest\mergeDebugUnitTestResources\merged.dir
-com.openschedule.plugin.hotwater.test.hotwater-mergeDebugUnitTestResources-1 D:\file\code\project\OpeningSchool\plugin\hotwater\build\intermediates\incremental\debugUnitTest\mergeDebugUnitTestResources\stripped.dir
-com.openschedule.plugin.hotwater.test.hotwater-debugUnitTest-2 D:\file\code\project\OpeningSchool\plugin\hotwater\build\intermediates\merged_res\debugUnitTest\mergeDebugUnitTestResources
-gradleHome-0 C:\Users\Administrator\.gradle
