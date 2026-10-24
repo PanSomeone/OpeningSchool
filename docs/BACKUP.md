@@ -34,8 +34,9 @@ git show backup/pre-iteration-2026-10-25:path/to/file
 - 可回滚标签：`backup/beta2-2026-10-25`（指向本提交）
 - 本地产物：`app/build/outputs/apk/release/app-release.apk`
 - SHA-256：`280bf065a56f74486e4c288b312ba8a9753c6bdc060c9a34cd8104159151c78e`
+- 已发布：`https://github.com/PanSomeone/OpeningSchool/releases/tag/v1.0.0-beta2`
 - Release 包启用 R8 默认混淆与资源压缩；签名密钥不公开。
-- 适配器包：`adapter-v1` 预发布，包含正方与示例两个外部适配器；目录见 `market/catalog.json`。
+- 适配器包：`adapter-v1` 预发布（`https://github.com/PanSomeone/OpeningSchool/releases/tag/adapter-v1`），包含正方与示例两个外部适配器；目录见 `market/catalog.json`。
 
 ## 当前验证记录
 
