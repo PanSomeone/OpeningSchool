@@ -103,9 +103,8 @@ fun TimetableGrid(
                         PeriodColumn(periods = periods, cellHeight = cellHeight)
                         visibleDays.forEach { isoDay ->
                             val occurrences = timetable.courses
-                                .filter { it.occursIn(week) }
                                 .flatMap { course ->
-                                    course.slotsOn(isoDay).map { slot ->
+                                    course.slotsOn(isoDay, week).map { slot ->
                                         CourseOccurrence(course, slot)
                                     }
                                 }

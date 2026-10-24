@@ -15,8 +15,15 @@ data class CourseSlot(
     val day: Int,
     val startPeriod: Int,
     val endPeriod: Int,
+    /** Empty falls back to [Course.weeks], so one course can meet on different weeks per slot. */
+    val weeks: Set<Int> = emptySet(),
 ) {
     val periodSpan: Int get() = (endPeriod - startPeriod + 1).coerceAtLeast(1)
+
+    fun occursIn(week: Int, courseWeeks: Set<Int>): Boolean {
+        val effective = weeks.ifEmpty { courseWeeks }
+        return effective.isEmpty() || week in effective
+    }
 }
 
 @Serializable
@@ -43,7 +50,12 @@ data class Course(
 
     fun slotsOn(isoDay: Int): List<CourseSlot> = effectiveSlots.filter { it.day == isoDay }
 
+    fun slotsOn(isoDay: Int, week: Int): List<CourseSlot> =
+        effectiveSlots.filter { it.day == isoDay && it.occursIn(week, weeks) }
+
     fun occursIn(week: Int): Boolean = weeks.isEmpty() || week in weeks
+
+    fun hasSlotIn(week: Int): Boolean = effectiveSlots.any { it.occursIn(week, weeks) }
 }
 
 @Serializable
@@ -60,7 +72,7 @@ data class Timetable(
 ) {
     val periodCount: Int get() = periods.size.coerceAtLeast(1)
 
-    fun coursesIn(week: Int): List<Course> = courses.filter { it.occursIn(week) }
+    fun coursesIn(week: Int): List<Course> = courses.filter { it.hasSlotIn(week) }
 
     fun period(index: Int): Period? = periods.firstOrNull { it.index == index }
 

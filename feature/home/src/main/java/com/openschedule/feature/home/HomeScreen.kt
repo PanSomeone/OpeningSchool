@@ -145,9 +145,8 @@ fun HomeScreen(
     )
     val todayCourses = if (timetableEnabled) {
         timetable.courses
-            .filter { it.occursIn(week) }
             .flatMap { course ->
-                course.slotsOn(today.dayOfWeek.value).map { slot ->
+                course.slotsOn(today.dayOfWeek.value, week).map { slot ->
                     TodayCourse(course, slot)
                 }
             }

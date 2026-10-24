@@ -2,6 +2,7 @@ package com.openschedule.core.data
 
 import com.openschedule.core.model.COURSE_COLOR_COUNT
 import com.openschedule.core.model.Course
+import com.openschedule.core.model.CourseSlot
 import com.openschedule.core.model.Period
 import com.openschedule.core.model.ScheduleText
 import com.openschedule.core.model.Timetable
@@ -72,19 +73,55 @@ object WebScheduleParser {
             warnings += "部分课程没有识别到周次，已按全周显示"
         }
 
-        val courses = best.courses.map { course ->
-            Course(
-                id = UUID.randomUUID().toString(),
-                name = course.name,
-                teacher = course.teacher,
-                location = course.location,
-                day = course.day.coerceIn(1, 7),
-                startPeriod = course.startPeriod.coerceAtLeast(1),
-                endPeriod = course.endPeriod.coerceAtLeast(course.startPeriod),
-                weeks = course.weeks.filter { it in 1..totalWeeks }.toSet(),
-                color = Math.floorMod(course.name.hashCode(), COURSE_COLOR_COUNT),
-            )
-        }
+        val courses = best.courses
+            .groupBy {
+                listOf(it.name, it.teacher, it.location, it.groupName).joinToString("\u0000")
+            }
+            .values
+            .map { entries ->
+                val ordered = entries.sortedWith(
+                    compareBy({ it.day }, { it.startPeriod }, { it.endPeriod }),
+                )
+                val first = ordered.first()
+                val slots = ordered
+                    .groupBy { Triple(it.day, it.startPeriod, it.endPeriod) }
+                    .values
+                    .map { sameSlot ->
+                        val allWeeks = sameSlot.any { it.weeks.isEmpty() }
+                        val slotWeeks = if (allWeeks) {
+                            emptySet()
+                        } else {
+                            sameSlot.flatMap { it.weeks }.filter { it in 1..totalWeeks }.toSet()
+                        }
+                        CourseSlot(
+                            day = sameSlot.first().day.coerceIn(1, 7),
+                            startPeriod = sameSlot.first().startPeriod.coerceAtLeast(1),
+                            endPeriod = sameSlot.first().endPeriod
+                                .coerceAtLeast(sameSlot.first().startPeriod),
+                            weeks = slotWeeks,
+                        )
+                    }
+                    .sortedWith(compareBy({ it.day }, { it.startPeriod }))
+                val allWeeks = ordered.any { it.weeks.isEmpty() }
+                val courseWeeks = if (allWeeks) {
+                    emptySet()
+                } else {
+                    ordered.flatMap { it.weeks }.filter { it in 1..totalWeeks }.toSet()
+                }
+                Course(
+                    id = UUID.randomUUID().toString(),
+                    name = first.name,
+                    teacher = first.teacher,
+                    location = first.location,
+                    day = first.day.coerceIn(1, 7),
+                    startPeriod = first.startPeriod.coerceAtLeast(1),
+                    endPeriod = first.endPeriod.coerceAtLeast(first.startPeriod),
+                    weeks = courseWeeks,
+                    color = Math.floorMod(first.name.hashCode(), COURSE_COLOR_COUNT),
+                    slots = slots,
+                )
+            }
+            .sortedWith(compareBy({ it.day }, { it.startPeriod }, { it.name }))
 
         return Result.success(
             ParsedWebTimetable(
@@ -114,6 +151,7 @@ object WebScheduleParser {
         val startPeriod: Int,
         val endPeriod: Int,
         val weeks: Set<Int>,
+        val groupName: String = "",
     )
 
     private data class CellRef(
@@ -138,6 +176,10 @@ object WebScheduleParser {
         val start = inferSemesterStart(doc, today)
 
         parseJsonPage(doc)?.let { courses ->
+            return Extracted(courses, start.date, start.inferred)
+        }
+
+        parseHzauGrid(doc)?.let { courses ->
             return Extracted(courses, start.date, start.inferred)
         }
 
@@ -188,6 +230,76 @@ object WebScheduleParser {
             if (!value.isNullOrBlank()) return value
         }
         return null
+    }
+
+    // --------------------------------------------------------------- HZAU grid
+
+    /**
+     * HZAU renders one td per weekday/period block and puts each course in a
+     * .timetable_con card. The td id is "day-startPeriod", while the card's
+     * 节/周 line is more precise; use both, and skip red/dashed wait-list cards.
+     */
+    private fun parseHzauGrid(doc: Document): List<ScrapedCourse>? {
+        val tables = doc.select("table[id^=kbgrid_table_], table.timetable1")
+        if (tables.isEmpty()) return null
+
+        val result = mutableListOf<ScrapedCourse>()
+        tables.forEach { table ->
+            val cells = table.select("td.td_wrap[id], td[id]")
+            val dayPeriod = Regex("(\\d+)-(\\d+)")
+            cells.forEach { cell ->
+                val match = dayPeriod.matchEntire(cell.id()) ?: return@forEach
+                val day = match.groupValues[1].toIntOrNull()?.takeIf { it in 1..7 }
+                    ?: return@forEach
+                val startPeriod = match.groupValues[2].toIntOrNull()?.takeIf { it in 1..30 }
+                    ?: return@forEach
+                val rowSpan = cell.attr("rowspan").toIntOrNull()?.coerceIn(1, 20) ?: 1
+                val fallbackPeriod = startPeriod..(startPeriod + rowSpan - 1)
+
+                cell.select("div.timetable_con").forEach { card ->
+                    val title = card.selectFirst(".title") ?: return@forEach
+                    val color = title.selectFirst("font")?.attr("color").orEmpty()
+                    if (color.equals("red", ignoreCase = true)) return@forEach
+
+                    val name = cleanCourseName(title.text())
+                    if (name.isBlank() || name in IGNORED_NAMES) return@forEach
+
+                    val details = mutableMapOf<String, String>()
+                    card.select("p").forEach { paragraph ->
+                        val label = paragraph.selectFirst("span[title]")
+                            ?.attr("title")
+                            ?.trim()
+                            .orEmpty()
+                        if (label.isBlank()) return@forEach
+                        val value = paragraph.select("font")
+                            .lastOrNull { it.text().isNotBlank() }
+                            ?.text()
+                            ?.let(::cleanText)
+                            .orEmpty()
+                        if (value.isNotBlank()) details[label] = value
+                    }
+
+                    val schedule = details["节/周"].orEmpty()
+                    val period = ScheduleText.parsePeriodRange(schedule) ?: fallbackPeriod
+                    val weekText = if (schedule.contains('节')) {
+                        schedule.substringAfter('节').trimStart(')', '）')
+                    } else {
+                        schedule
+                    }
+                    result += ScrapedCourse(
+                        name = name,
+                        teacher = details["教师"].orEmpty(),
+                        location = details["上课地点"].orEmpty(),
+                        day = day,
+                        startPeriod = period.first.coerceAtLeast(1),
+                        endPeriod = period.last.coerceAtLeast(period.first).coerceAtMost(20),
+                        weeks = ScheduleText.parseWeeks(weekText),
+                        groupName = details["教学班名称"].orEmpty(),
+                    )
+                }
+            }
+        }
+        return result.takeIf { it.isNotEmpty() }
     }
 
     // ------------------------------------------------------------------ tables
@@ -374,9 +486,10 @@ object WebScheduleParser {
     private fun cleanCourseName(raw: String): String =
         raw
             .replace(Regex("[（(]?\\d+\\s*[-~至]\\s*\\d+\\s*周[^）)]*[）)]?"), "")
+            .replace(Regex("[☆○□△◇★●]"), "")
             .replace(Regex("\\s+"), " ")
             .trim()
-            .trimStart('★', '*', '●')
+            .trimStart('*')
 
     private fun looksLikeLocation(raw: String): Boolean =
         LOCATION_HINTS.any { raw.contains(it) }

@@ -354,6 +354,7 @@ fun CourseEditorSheet(
                                 day = slot.day.coerceIn(1, 7),
                                 startPeriod = start,
                                 endPeriod = slot.endPeriod.coerceIn(start, periodCount),
+                                weeks = emptySet(),
                             )
                         }
                         .sortedWith(compareBy({ it.day }, { it.startPeriod }))

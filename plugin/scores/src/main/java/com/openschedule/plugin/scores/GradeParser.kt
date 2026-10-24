@@ -45,6 +45,7 @@ object GradeParser {
         if (html.isBlank()) return null
         val doc = Jsoup.parse(html)
         parseJsonPage(doc)?.let { return it }
+        parseJqGrid(doc)?.let { return it }
 
         val tables = doc.select("table")
         val candidates = tables.mapNotNull { table ->
@@ -103,6 +104,83 @@ object GradeParser {
 
         if (courses.isEmpty() && skippedLevel == 0) return null
         return ParsedGrades(courses, skippedLevel, skippedInvalid)
+    }
+
+    /**
+     * jqGrid separates its header table from the data table, so the generic
+     * header-index parser cannot see both. Read the aria-describedby keys
+     * instead (kcmc/xf/cj/xnmmc/xqmmc) and keep the generic parser as fallback.
+     */
+    private fun parseJqGrid(doc: Document): ParsedGrades? {
+        val grids = doc.select("table.ui-jqgrid-btable")
+        if (grids.isEmpty()) return null
+
+        return grids.mapNotNull { table ->
+            val rows = table.select("tbody tr")
+                .filter { it.attr("role") == "row" && !it.hasClass("jqgfirstrow") }
+            if (rows.isEmpty()) return@mapNotNull null
+
+            var skippedLevel = 0
+            var skippedInvalid = 0
+            val courses = mutableListOf<GpaCourse>()
+            rows.forEach { row ->
+                val values = row.children()
+                    .filter { it.tagName() == "td" }
+                    .mapNotNull { cell ->
+                        val describedBy = cell.attr("aria-describedby")
+                        if (describedBy.isBlank()) return@mapNotNull null
+                        val key = describedBy.substringAfter('_', describedBy)
+                        key to clean(cell.text())
+                    }
+                    .toMap()
+
+                val name = values.firstNotBlank("kcmc", "kcName", "courseName", "name")
+                    ?: return@forEach
+                if (name in IGNORED_NAMES || name.contains("合计") || name.contains("平均")) {
+                    return@forEach
+                }
+                val credit = values.firstNotBlank("xf", "credit", "xuefen")?.let(::number)
+                val scoreText = values.firstNotBlank("cj", "score", "finalScore", "bfzcj")
+                val score = scoreText?.let(::number)
+                if (credit == null || credit <= 0 || score == null) {
+                    if (scoreText != null && isLevel(scoreText)) {
+                        skippedLevel += 1
+                    } else {
+                        skippedInvalid += 1
+                    }
+                    return@forEach
+                }
+
+                val term = listOfNotNull(
+                    values.firstNotBlank("xnmmc", "xnmc", "xnm"),
+                    values.firstNotBlank("xqmmc", "xqm"),
+                ).joinToString(" ")
+                courses += GpaCourse(
+                    id = "",
+                    name = name,
+                    credit = credit,
+                    score = score,
+                    term = term,
+                )
+            }
+
+            if (courses.isEmpty() && skippedLevel == 0) {
+                null
+            } else {
+                ParsedGrades(
+                    courses = courses.distinctBy { it.key() },
+                    skippedLevel = skippedLevel,
+                    skippedInvalid = skippedInvalid,
+                )
+            }
+        }.maxByOrNull { it.courses.size }
+    }
+
+    private fun Map<String, String>.firstNotBlank(vararg keys: String): String? {
+        keys.forEach { key ->
+            this[key]?.takeIf { it.isNotBlank() }?.let { return it }
+        }
+        return null
     }
 
     private fun parseTable(table: Element): ParsedGrades? {
