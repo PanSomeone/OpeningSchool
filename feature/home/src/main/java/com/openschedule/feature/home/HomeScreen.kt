@@ -3,7 +3,6 @@ package com.openschedule.feature.home
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -25,6 +24,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.DragIndicator
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.OpenInFull
 import androidx.compose.material.icons.filled.Settings
@@ -46,6 +46,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -55,15 +56,21 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.openschedule.core.model.Course
 import com.openschedule.core.model.CourseSlot
@@ -167,10 +174,7 @@ fun HomeScreen(
 
     if (showWeather) {
         WeatherScreen(
-            weather = weather,
-            loading = loadingWeather,
-            error = weatherError,
-            onRefresh = viewModel::refreshWeather,
+            viewModel = viewModel,
             onBack = { showWeather = false },
         )
         return
@@ -477,6 +481,7 @@ private fun HomeCanvas(
 ) {
     val rows = layout.rows
     val density = LocalDensity.current
+    val haptics = LocalHapticFeedback.current
     var dragId by remember { mutableStateOf<String?>(null) }
     var dragOffset by remember { mutableStateOf(Offset.Zero) }
     var dragTarget by remember { mutableStateOf<Pair<Int, Int>?>(null) }
@@ -532,7 +537,15 @@ private fun HomeCanvas(
                     modifier = Modifier
                         .offset(x = x, y = y)
                         .width(w)
-                        .height(h),
+                        .height(h)
+                        .zIndex(if (dragging) 1f else 0f)
+                        .graphicsLayer {
+                            translationX = if (dragging) dragOffset.x else 0f
+                            translationY = if (dragging) dragOffset.y else 0f
+                            val scale = if (dragging) 1.03f else 1f
+                            scaleX = scale
+                            scaleY = scale
+                        },
                 ) {
                     if (available) {
                         Surface(
@@ -547,29 +560,47 @@ private fun HomeCanvas(
                                 .fillMaxSize()
                                 .alpha(if (dragging) 0.35f else 1f),
                         ) {
-                            WidgetContent(
-                                widget = widget,
-                                modifier = Modifier.fillMaxSize(),
-                                externalWidgets = externalWidgets,
-                                shortcuts = shortcuts,
-                                timetable = timetable,
-                                timetableEnabled = timetableEnabled,
-                                todayCourses = todayCourses,
-                                weather = weather,
-                                loadingWeather = loadingWeather,
-                                onOpen = onOpen,
-                                onOpenWeather = onOpenWeather,
-                                onOpenFolder = { onOpenFolder(widget.id) },
-                            )
+                            val fontScale = when {
+                                widget.colSpan == 2 && widget.rowSpan == 2 -> 1.10f
+                                widget.rowSpan == 2 -> 1.06f
+                                widget.colSpan == 2 -> 1.03f
+                                else -> 1f
+                            }
+                            val widgetDensity = remember(
+                                density.density,
+                                density.fontScale,
+                                fontScale,
+                            ) {
+                                Density(density.density, density.fontScale * fontScale)
+                            }
+                            CompositionLocalProvider(LocalDensity provides widgetDensity) {
+                                WidgetContent(
+                                    widget = widget,
+                                    modifier = Modifier.fillMaxSize(),
+                                    externalWidgets = externalWidgets,
+                                    shortcuts = shortcuts,
+                                    timetable = timetable,
+                                    timetableEnabled = timetableEnabled,
+                                    todayCourses = todayCourses,
+                                    weather = weather,
+                                    loadingWeather = loadingWeather,
+                                    onOpen = onOpen,
+                                    onOpenWeather = onOpenWeather,
+                                    onOpenFolder = { onOpenFolder(widget.id) },
+                                )
+                            }
                         }
 
                         if (!editMode) {
                             Box(
                                 modifier = Modifier
-                                    .align(Alignment.TopCenter)
-                                    .padding(top = 4.dp)
-                                    .width(48.dp)
-                                    .height(22.dp)
+                                    .align(Alignment.TopEnd)
+                                    .padding(top = 6.dp, end = 6.dp)
+                                    .size(32.dp)
+                                    .clip(CircleShape)
+                                    .background(
+                                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f),
+                                    )
                                     .pointerInput(
                                         widget.id,
                                         rows,
@@ -578,8 +609,11 @@ private fun HomeCanvas(
                                         widget.colSpan,
                                         widget.rowSpan,
                                     ) {
-                                        detectDragGestures(
+                                        detectDragGesturesAfterLongPress(
                                             onDragStart = {
+                                                haptics.performHapticFeedback(
+                                                    HapticFeedbackType.LongPress,
+                                                )
                                                 dragId = widget.id
                                                 dragStart = widget.row to widget.col
                                                 dragSize = WidgetSize(widget.colSpan, widget.rowSpan)
@@ -618,14 +652,12 @@ private fun HomeCanvas(
                                     },
                                 contentAlignment = Alignment.Center,
                             ) {
-                                Box(
-                                    modifier = Modifier
-                                        .width(24.dp)
-                                        .height(3.dp)
-                                        .background(
-                                            MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.45f),
-                                            RoundedCornerShape(2.dp),
-                                        ),
+                                Icon(
+                                    Icons.Filled.DragIndicator,
+                                    contentDescription = "长按拖动组件",
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                        .copy(alpha = 0.45f),
+                                    modifier = Modifier.size(15.dp),
                                 )
                             }
                         }
@@ -844,7 +876,7 @@ private fun WeatherWidget(
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = weather?.let { "${it.temperature}°" } ?: if (loading) "…" else "--",
-                        fontSize = if (rowSpan == 2) 52.sp else 30.sp,
+                        fontSize = if (rowSpan == 2) 48.sp else 30.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.onPrimaryContainer,
                     )
@@ -969,38 +1001,46 @@ private fun TodayWidget(
                 fontWeight = FontWeight.SemiBold,
             )
             val next = courses.first()
-            Text(
-                text = listOf(timeLabel(timetable, next.slot), next.course.name)
-                    .filter { it.isNotBlank() }
-                    .joinToString(" · "),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-            )
+            Row(
+                modifier = Modifier.padding(top = 3.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                CourseTimes(timetable, next.slot)
+                Text(
+                    text = next.course.name,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(start = 7.dp),
+                )
+            }
         } else {
             Column(
                 modifier = Modifier
                     .weight(1f)
                     .padding(top = 6.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp),
+                verticalArrangement = Arrangement.spacedBy(5.dp),
             ) {
                 val visible = if (rowSpan == 2) courses.take(4) else courses.take(2)
                 val palette = LocalCourseColors.current
                 visible.forEach { occurrence ->
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(
+                        CourseTimes(timetable, occurrence.slot)
+                        Surface(
+                            color = palette[normalizedColor(occurrence.course.color)].container,
                             modifier = Modifier
+                                .padding(start = 5.dp)
                                 .width(3.dp)
-                                .height(22.dp)
-                                .alpha(1f),
+                                .height(28.dp),
+                        ) {}
+                        Column(
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(start = 7.dp),
                         ) {
-                            Surface(
-                                color = palette[normalizedColor(occurrence.course.color)].container,
-                                modifier = Modifier.fillMaxSize(),
-                            ) {}
-                        }
-                        Column(modifier = Modifier.padding(start = 6.dp)) {
                             Text(
                                 text = occurrence.course.name,
                                 style = MaterialTheme.typography.bodySmall,
@@ -1008,10 +1048,7 @@ private fun TodayWidget(
                                 overflow = TextOverflow.Ellipsis,
                             )
                             Text(
-                                text = listOf(
-                                    timeLabel(timetable, occurrence.slot),
-                                    occurrence.course.location,
-                                ).filter { it.isNotBlank() }.joinToString(" · "),
+                                text = occurrence.course.location,
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 maxLines = 1,
@@ -1025,9 +1062,37 @@ private fun TodayWidget(
                         text = "还有 ${courses.size - visible.size} 节",
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(start = 51.dp),
                     )
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun CourseTimes(
+    timetable: Timetable,
+    slot: CourseSlot,
+    modifier: Modifier = Modifier,
+) {
+    val start = timetable.period(slot.startPeriod)?.start.orEmpty()
+    val end = timetable.period(slot.endPeriod)?.end.orEmpty()
+    Column(
+        modifier = modifier.width(44.dp),
+        horizontalAlignment = Alignment.End,
+    ) {
+        Text(
+            text = start.ifBlank { "--" },
+            style = MaterialTheme.typography.labelSmall,
+            fontWeight = FontWeight.Medium,
+        )
+        if (end.isNotBlank()) {
+            Text(
+                text = end,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.65f),
+            )
         }
     }
 }
@@ -1679,16 +1744,6 @@ private fun folderEntries(
 ): List<HomeShortcut> {
     val byId = shortcuts.associateBy { it.id }
     return folder.shortcuts.mapNotNull { byId[it] }
-}
-
-private fun timeLabel(timetable: Timetable, slot: CourseSlot): String {
-    val start = timetable.period(slot.startPeriod)?.start.orEmpty()
-    val end = timetable.period(slot.endPeriod)?.end.orEmpty()
-    return when {
-        start.isNotBlank() && end.isNotBlank() -> "$start–$end"
-        start.isNotBlank() -> start
-        else -> ""
-    }
 }
 
 private val SINGLE_TYPES_ORDER = setOf("weather", "today", "date", "hotwater", "scores")

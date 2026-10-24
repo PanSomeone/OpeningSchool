@@ -5,12 +5,16 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -33,11 +37,13 @@ import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.SystemUpdate
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SnackbarHost
@@ -46,6 +52,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -56,8 +63,12 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -96,6 +107,7 @@ fun SettingsScreen(
     var aboutDialog by remember { mutableStateOf<AboutDialog?>(null) }
     var showWallpaper by remember { mutableStateOf(false) }
     var exportingLog by remember { mutableStateOf(false) }
+    var showSponsor by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     val wallpaperStatus = when {
         settings.pageWallpapers.isNotEmpty() && settings.appWallpaper != null ->
@@ -407,13 +419,7 @@ fun SettingsScreen(
                     icon = Icons.Filled.Favorite,
                     title = "赞助",
                     value = null,
-                    onClick = {
-                        if (SPONSOR_URL.isBlank()) {
-                            aboutDialog = AboutDialog.SPONSOR
-                        } else {
-                            context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(SPONSOR_URL)))
-                        }
-                    },
+                    onClick = { showSponsor = true },
                 )
             }
             }
@@ -456,7 +462,6 @@ fun SettingsScreen(
                 Text(
                     when (dialog) {
                         AboutDialog.UPDATE -> "检查更新"
-                        AboutDialog.SPONSOR -> "赞助开源大学"
                         AboutDialog.FEEDBACK -> "反馈"
                     },
                 )
@@ -465,7 +470,6 @@ fun SettingsScreen(
                 Text(
                     when (dialog) {
                         AboutDialog.UPDATE -> "更新地址尚未配置；代码仓库建立后会接入。"
-                        AboutDialog.SPONSOR -> "赞助方式即将补充，感谢支持开源大学。"
                         AboutDialog.FEEDBACK -> "反馈地址尚未配置；配置代码仓库后可直接打开 Issues。"
                     },
                 )
@@ -475,9 +479,97 @@ fun SettingsScreen(
             },
         )
     }
+
+    if (showSponsor) {
+        SponsorSheet(onDismiss = { showSponsor = false })
+    }
 }
 
-private enum class AboutDialog { UPDATE, SPONSOR, FEEDBACK }
+private enum class AboutDialog { UPDATE, FEEDBACK }
+
+private enum class SponsorPlatform { WECHAT, ALIPAY }
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun SponsorSheet(onDismiss: () -> Unit) {
+    var platform by remember { mutableStateOf(SponsorPlatform.WECHAT) }
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+        containerColor = MaterialTheme.colorScheme.surface,
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 20.dp)
+                .padding(bottom = 32.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            Text("赞助开源大学", style = MaterialTheme.typography.titleLarge)
+            Text(
+                text = "感谢支持。赞助用于持续维护和更新，纯属自愿，不影响任何功能。",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+            )
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                FilterChip(
+                    selected = platform == SponsorPlatform.WECHAT,
+                    onClick = { platform = SponsorPlatform.WECHAT },
+                    label = { Text("微信") },
+                )
+                FilterChip(
+                    selected = platform == SponsorPlatform.ALIPAY,
+                    onClick = { platform = SponsorPlatform.ALIPAY },
+                    label = { Text("支付宝") },
+                )
+            }
+            Crossfade(
+                targetState = platform,
+                animationSpec = tween(durationMillis = 180),
+                label = "sponsorQr",
+            ) { selected ->
+                val (resource, description, ratio) = when (selected) {
+                    SponsorPlatform.WECHAT -> Triple(
+                        R.drawable.sponsor_wechat,
+                        "微信收款二维码",
+                        800f / 1090f,
+                    )
+
+                    SponsorPlatform.ALIPAY -> Triple(
+                        R.drawable.sponsor_alipay,
+                        "支付宝收款二维码",
+                        800f / 1201f,
+                    )
+                }
+                Surface(
+                    shape = RoundedCornerShape(20.dp),
+                    color = Color.White,
+                    modifier = Modifier.fillMaxWidth(0.88f),
+                ) {
+                    Image(
+                        painter = painterResource(resource),
+                        contentDescription = description,
+                        contentScale = ContentScale.Fit,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .aspectRatio(ratio)
+                            .padding(10.dp),
+                    )
+                }
+            }
+            Text(
+                text = if (platform == SponsorPlatform.WECHAT) "微信扫一扫" else "支付宝扫一扫",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    }
+}
 
 @Composable
 private fun AboutRow(
@@ -543,8 +635,6 @@ private const val UPDATE_URL = "https://github.com/PanSomeone/OpeningSchool/rele
 /** Set to the repository issues page. */
 private const val FEEDBACK_URL = "https://github.com/PanSomeone/OpeningSchool/issues"
 
-/** Set to a sponsorship page when available. */
-private const val SPONSOR_URL = ""
 
 @Composable
 private fun ThemeChoice(

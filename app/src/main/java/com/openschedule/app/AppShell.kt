@@ -3,7 +3,9 @@ package com.openschedule.app
 import android.graphics.BitmapFactory
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
@@ -89,23 +91,8 @@ fun AppShell(graph: AppGraph) {
     val settings by graph.settingsStore.settings.collectAsStateWithLifecycle()
 
     val homeViewModel = rememberedViewModel(HomeViewModel::class.java, "home") {
-        HomeViewModel(graph.timetableStore)
+        HomeViewModel(graph.timetableStore, graph.weatherStore)
     }
-    val timetableViewModel = rememberedViewModel(TimetableViewModel::class.java, "timetable") {
-        TimetableViewModel(
-            timetableStore = graph.timetableStore,
-            settingsStore = graph.settingsStore,
-            builtInImporters = graph.builtInImporters,
-            externalAdapters = graph.externalAdapters,
-        )
-    }
-    val settingsViewModel = rememberedViewModel(SettingsViewModel::class.java, "settings") {
-        SettingsViewModel(graph.settingsStore)
-    }
-    val pluginsViewModel = rememberedViewModel(PluginsViewModel::class.java, "plugins") {
-        PluginsViewModel(graph.builtInImporters, graph.externalAdapters)
-    }
-
     var selectedId by rememberSaveable { mutableStateOf("home") }
     var pluginSettingsId by rememberSaveable { mutableStateOf<String?>(null) }
 
@@ -189,7 +176,17 @@ fun AppShell(graph: AppGraph) {
             iconKey = "calendar",
             defaultOrder = 1,
             pluginId = "timetable",
-            content = { TimetableScreen(timetableViewModel) },
+            content = {
+                val viewModel = rememberedViewModel(TimetableViewModel::class.java, "timetable") {
+                    TimetableViewModel(
+                        timetableStore = graph.timetableStore,
+                        settingsStore = graph.settingsStore,
+                        builtInImporters = graph.builtInImporters,
+                        externalAdapters = graph.externalAdapters,
+                    )
+                }
+                TimetableScreen(viewModel)
+            },
         ),
         PluginDestination(
             id = "hotwater",
@@ -214,8 +211,11 @@ fun AppShell(graph: AppGraph) {
             iconKey = "extension",
             defaultOrder = 3,
             content = {
+                val viewModel = rememberedViewModel(PluginsViewModel::class.java, "plugins") {
+                    PluginsViewModel(graph.builtInImporters, graph.externalAdapters)
+                }
                 PluginsRoute(
-                    viewModel = pluginsViewModel,
+                    viewModel = viewModel,
                     settingsStore = graph.settingsStore,
                     onOpenPluginSettings = { pluginSettingsId = it },
                 )
@@ -227,8 +227,11 @@ fun AppShell(graph: AppGraph) {
             iconKey = "settings",
             defaultOrder = 4,
             content = {
+                val viewModel = rememberedViewModel(SettingsViewModel::class.java, "settings") {
+                    SettingsViewModel(graph.settingsStore)
+                }
                 SettingsScreen(
-                    viewModel = settingsViewModel,
+                    viewModel = viewModel,
                     hiddenPluginIds = settings.disabledPlugins,
                 )
             },
@@ -334,10 +337,23 @@ fun AppShell(graph: AppGraph) {
                         .padding(innerPadding),
                 ) {
                     when (pluginSettingsId) {
-                        "timetable" -> TimetableSettingsScreen(
-                            viewModel = timetableViewModel,
-                            onBack = { pluginSettingsId = null },
-                        )
+                        "timetable" -> {
+                            val viewModel = rememberedViewModel(
+                                TimetableViewModel::class.java,
+                                "timetable",
+                            ) {
+                                TimetableViewModel(
+                                    timetableStore = graph.timetableStore,
+                                    settingsStore = graph.settingsStore,
+                                    builtInImporters = graph.builtInImporters,
+                                    externalAdapters = graph.externalAdapters,
+                                )
+                            }
+                            TimetableSettingsScreen(
+                                viewModel = viewModel,
+                                onBack = { pluginSettingsId = null },
+                            )
+                        }
 
                         "hotwater" -> HotWaterSettingsScreen(onBack = { pluginSettingsId = null })
                         "scores" -> ScoresSettingsScreen(onBack = { pluginSettingsId = null })
@@ -465,7 +481,10 @@ private fun FloatingNav(
     }
     val highlightOffset by animateDpAsState(
         targetValue = targetOffset,
-        animationSpec = tween(durationMillis = 260),
+        animationSpec = spring(
+            dampingRatio = 0.86f,
+            stiffness = Spring.StiffnessMediumLow,
+        ),
         label = "navHighlight",
     )
 
