@@ -34,3 +34,6 @@ include(":feature:plugins")
 include(":adapter:zhengfang")
 include(":plugin:hotwater")
 include(":plugin:scores")
+
+include(":adapter:zhengfang-external")
+include(":adapter:sample-external")
