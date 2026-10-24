@@ -28,8 +28,18 @@ git show backup/pre-iteration-2026-10-25:path/to/file
 - 本地构建：`app/build/outputs/apk/release/app-release.apk`
 - Release 包默认启用 R8/资源压缩；Debug 包不启用。
 
+## 2026-10-25 beta2
+
+- 版本：`1.0.0-beta2`（versionCode 3）
+- 可回滚标签：`backup/beta2-2026-10-25`（指向本提交）
+- 本地产物：`app/build/outputs/apk/release/app-release.apk`
+- SHA-256：`280bf065a56f74486e4c288b312ba8a9753c6bdc060c9a34cd8104159151c78e`
+- Release 包启用 R8 默认混淆与资源压缩；签名密钥不公开。
+- 适配器包：`adapter-v1` 预发布，包含正方与示例两个外部适配器；目录见 `market/catalog.json`。
+
 ## 当前验证记录
 
-- 36 项单元测试通过（新增华农课表/成绩解析回归测试）。
-- Release APK 在 API 37 模拟器冷启动约 0.8–1.1 秒。
-- 已验证：多地区天气搜索与持久化、赞助二维码、反馈跳转、日志导出、主页组件拖动入口。
+- 全部单元测试通过（新增华农课表/成绩解析回归测试）。
+- Release APK 在 API 37 模拟器冷启动约 0.9–1.1 秒，体积约 2.5 MB。
+- 已验证：多地区天气搜索与持久化、赞助二维码、反馈跳转、日志导出、主页长按拖动换位、今日课程时间左对齐、插件市场搜索/分类/并行批量下载/SHA 校验、外部适配器发现与导入。
+- 插件市场安装仍由系统确认；未知来源权限需要用户手动允许。

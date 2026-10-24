@@ -251,6 +251,12 @@ fun WeatherScreen(
                     modifier = Modifier.padding(top = 10.dp, start = 4.dp),
                 )
             }
+            Text(
+                text = "天气数据：Open-Meteo",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = 10.dp, start = 4.dp),
+            )
             Spacer(Modifier.height(8.dp))
         }
     }
