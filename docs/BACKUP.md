@@ -117,6 +117,7 @@ git show backup/pre-iteration-2026-10-25:path/to/file
 ## 2026-10-25 beta14
 
 - 版本：`1.0.0-beta14`（versionCode 15）
+- SHA-256：`826c3b3e2d371d1ffda48bd235d8ae59464ca114bc042f72c5adde2ffe96f74a`
 - 应用内更新默认源切换为 Gitee：优先读取 Gitee 的 `update.json` 与发行版 APK，失败时回退 GitHub。
 - 公告源同样改为 Gitee 优先、GitHub 备用。
 - Gitee 仓库按 798QuSiBa 的方式只保留下载页与更新清单，不保留源代码；源码与 Issues 仍以 GitHub 为准。
