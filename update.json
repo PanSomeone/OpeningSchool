@@ -1,10 +1,10 @@
 {
-  "version": "1.0.0-beta14",
-  "title": "开源大学 1.0.0-beta14",
-  "notes": "本次更新：\n- 应用内更新默认改用 Gitee，GitHub 作为备用源\n- 公告也优先从 Gitee 获取，失败时回退 GitHub\n- 壁纸改为按屏幕分辨率保存，裁切后更清晰；课表背景统一到「设置 → 壁纸 → 课表」\n- Gitee 只发布安装包与更新清单，源代码继续保留在 GitHub",
-  "pageUrl": "https://gitee.com/PanSomeone/OpeningSchool/releases/tag/v1.0.0-beta14",
-  "apkUrl": "https://gitee.com/PanSomeone/OpeningSchool/releases/download/v1.0.0-beta14/OpeningSchool-1.0.0-beta14.apk",
-  "fallbackApkUrl": "https://github.com/PanSomeone/OpeningSchool/releases/download/v1.0.0-beta14/OpeningSchool-1.0.0-beta14.apk",
-  "sha256": "826c3b3e2d371d1ffda48bd235d8ae59464ca114bc042f72c5adde2ffe96f74a",
-  "sizeBytes": 2746368
+  "version": "1.0.0-beta15",
+  "title": "开源大学 1.0.0-beta15",
+  "notes": "本次更新：\n- 修复主页公告角标过大、遮挡图标的问题，改为右上角小圆点\n- 保留 Gitee 优先更新、GitHub 备用下载\n- 其他功能与 beta14 相同",
+  "pageUrl": "https://gitee.com/PanSomeone/OpeningSchool/releases/tag/v1.0.0-beta15",
+  "apkUrl": "https://gitee.com/PanSomeone/OpeningSchool/releases/download/v1.0.0-beta15/OpeningSchool-1.0.0-beta15.apk",
+  "fallbackApkUrl": "https://github.com/PanSomeone/OpeningSchool/releases/download/v1.0.0-beta15/OpeningSchool-1.0.0-beta15.apk",
+  "sha256": "6364263b7b1c2638c71f8bd8a0e6b5ee1ccb23227c3e8085084413f408acb7d6",
+  "sizeBytes": 2746372
 }

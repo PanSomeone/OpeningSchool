@@ -1,7 +1,7 @@
 # 开源大学（OpeningSchool）
 功能说明
 
-> 当前测试版：`1.0.0-beta14`（versionCode 15） · [下载与更新](https://gitee.com/PanSomeone/OpeningSchool/releases)
+> 当前测试版：`1.0.0-beta15`（versionCode 16） · [下载与更新](https://gitee.com/PanSomeone/OpeningSchool/releases)
 
 ## 运行环境
 - **平台**：Android（minSdk 26）

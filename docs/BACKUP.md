@@ -125,6 +125,13 @@ git show backup/pre-iteration-2026-10-25:path/to/file
 - 公告源同样改为 Gitee 优先、GitHub 备用。
 - Gitee 仓库按 798QuSiBa 的方式只保留下载页与更新清单，不保留源代码；源码与 Issues 仍以 GitHub 为准。
 
+## 2026-10-26 beta15
+
+- 版本：`1.0.0-beta15`（versionCode 16）
+- SHA-256：`6364263b7b1c2638c71f8bd8a0e6b5ee1ccb23227c3e8085084413f408acb7d6`
+- 修复主页公告角标过大、遮挡喇叭图标的问题：改用图标右上角的 8dp 小圆点，并带表面色描边。
+- 保留 Gitee 优先更新、GitHub 备用下载；其余功能与 beta14 相同。
+
 ## 当前验证记录
 
 - 全部单元测试通过（新增华农课表/成绩解析、版本比较回归测试）。

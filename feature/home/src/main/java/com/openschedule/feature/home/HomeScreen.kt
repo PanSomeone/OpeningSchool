@@ -30,8 +30,6 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.OpenInFull
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Badge
-import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
@@ -271,12 +269,24 @@ fun HomeScreen(
                 } else {
                     if (unreadAnnouncements > 0) {
                         IconButton(onClick = onOpenAnnouncements) {
-                            BadgedBox(
-                                badge = {
-                                    Badge { Text(unreadAnnouncements.coerceAtMost(9).toString()) }
-                                },
-                            ) {
-                                Icon(Icons.Filled.Campaign, contentDescription = "查看公告")
+                            Box {
+                                Icon(
+                                    Icons.Filled.Campaign,
+                                    contentDescription = "查看公告，$unreadAnnouncements 条未读",
+                                    modifier = Modifier.size(24.dp),
+                                )
+                                Box(
+                                    modifier = Modifier
+                                        .align(Alignment.TopEnd)
+                                        .offset(x = 4.dp, y = (-2).dp)
+                                        .size(8.dp)
+                                        .background(MaterialTheme.colorScheme.error, CircleShape)
+                                        .border(
+                                            1.dp,
+                                            MaterialTheme.colorScheme.surface,
+                                            CircleShape,
+                                        ),
+                                )
                             }
                         }
                     }
