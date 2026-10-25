@@ -1,9 +1,9 @@
 {
-  "version": "1.0.0-beta8",
-  "title": "开源大学 1.0.0-beta8",
-  "notes": "课表页面操作整理：\n- 右上角改为「更多」菜单，添加课程、导入课表、课表设置都收进去\n- 双击「第 N 周」回到本周，移除重复的日历按钮\n- 课程字号设置增加实时方格预览\n- 课程卡显示教师和斜体教室，两节课程充分利用高度",
-  "pageUrl": "https://github.com/PanSomeone/OpeningSchool/releases/tag/v1.0.0-beta8",
-  "apkUrl": "https://github.com/PanSomeone/OpeningSchool/releases/download/v1.0.0-beta8/OpeningSchool-1.0.0-beta8.apk",
-  "sha256": "e854eaed55292fbb1f7af09d096d4272cd64922c4360f4e2ee0c043de47a705f",
+  "version": "1.0.0-beta9",
+  "title": "开源大学 1.0.0-beta9",
+  "notes": "修复热水模块无法关闭的问题：启动时若服务端返回设备已在运行，按钮会切换为关闭而不是卡在启动态。\n\n同时修复隐藏设置导航后无法进入设置的问题：插件页右上角保留设置入口，插件页也隐藏时自动保留设置导航。",
+  "pageUrl": "https://github.com/PanSomeone/OpeningSchool/releases/tag/v1.0.0-beta9",
+  "apkUrl": "https://github.com/PanSomeone/OpeningSchool/releases/download/v1.0.0-beta9/OpeningSchool-1.0.0-beta9.apk",
+  "sha256": "2154f825833625f77829a6c693d966c4fdfbf4d458287797295ea1a3a4a0e108",
   "sizeBytes": 2645376
 }

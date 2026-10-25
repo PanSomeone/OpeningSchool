@@ -336,7 +336,25 @@ internal class HotWaterViewModel(
                     }
                 }
 
-                is Outcome.Failure -> finishWithFailure(result.error)
+                is Outcome.Failure -> {
+                    // If the server says the valve is already running, never leave
+                    // the screen stuck on "start": that is exactly when the user
+                    // needs the stop action. This also covers an app restart,
+                    // where the in-memory running flag is gone but the water is not.
+                    if (result.error is AppError.Refused &&
+                        result.error.code == ApiConstants.CODE_DEVICE_IN_USE
+                    ) {
+                        _state.update {
+                            it.copy(
+                                isBusy = false,
+                                runningOverride = true,
+                                errorMessage = "设备正在运行，可直接点下方按钮关闭。",
+                            )
+                        }
+                    } else {
+                        finishWithFailure(result.error)
+                    }
+                }
             }
         }
     }

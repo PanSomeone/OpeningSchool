@@ -89,6 +89,7 @@ fun PluginsScreen(
     onInstall: (String) -> Unit,
     onUninstall: (String) -> Unit,
     onOpenPluginSettings: (String) -> Unit,
+    onOpenSettings: () -> Unit,
 ) {
     var showMarket by remember { mutableStateOf(false) }
     var uninstalling by remember { mutableStateOf<BuiltInPluginUi?>(null) }
@@ -112,7 +113,11 @@ fun PluginsScreen(
         val installed = plugins.filter { it.installed }
 
         Column(modifier = Modifier.fillMaxSize()) {
-            ScreenHeader(title = "插件")
+            ScreenHeader(title = "插件") {
+                IconButton(onClick = onOpenSettings) {
+                    Icon(Icons.Filled.Settings, contentDescription = "设置")
+                }
+            }
 
             Column(
                 modifier = Modifier

@@ -221,6 +221,10 @@ fun AppShell(graph: AppGraph) {
                     viewModel = viewModel,
                     settingsStore = graph.settingsStore,
                     onOpenPluginSettings = { pluginSettingsId = it },
+                    onOpenSettings = {
+                        selectedId = "settings"
+                        pluginSettingsId = null
+                    },
                 )
             },
         ),
@@ -264,14 +268,24 @@ fun AppShell(graph: AppGraph) {
     val enabledDestinations = destinations.filter { destination ->
         destination.pluginId == null || destination.pluginId !in settings.disabledPlugins
     }
-    val navSlots = settings.nav
+    val visibleSlots = settings.nav
         .sortedBy { it.order }
         .filter { slot -> slot.visible && enabledDestinations.any { it.id == slot.id } }
         .take(MAX_NAV_SLOTS)
-        .ifEmpty {
-            // A removed plugin can be the last visible tab; keep a way back.
-            listOf(NavSlot(id = "plugins", label = "插件", iconKey = "extension"))
+    val navSlots = if (visibleSlots.any { it.id == "settings" || it.id == "plugins" }) {
+        visibleSlots
+    } else {
+        // Settings may be hidden, but the app must never lose its way back.
+        // Prefer the gear on the Plugins page; if both are hidden, surface Settings.
+        val settingsSlot = settings.nav.firstOrNull { it.id == "settings" }
+            ?.copy(visible = true)
+            ?: NavSlot(id = "settings", label = "设置", iconKey = "settings")
+        if (visibleSlots.size >= MAX_NAV_SLOTS) {
+            visibleSlots.dropLast(1) + settingsSlot
+        } else {
+            visibleSlots + settingsSlot
         }
+    }
 
     val selectedDestination = destinations.firstOrNull { it.id == selectedId }
     val selectedAvailable = selectedDestination != null &&
@@ -389,6 +403,7 @@ private fun PluginsRoute(
     viewModel: PluginsViewModel,
     settingsStore: SettingsStore,
     onOpenPluginSettings: (String) -> Unit,
+    onOpenSettings: () -> Unit,
 ) {
     val settings by settingsStore.settings.collectAsStateWithLifecycle()
     val catalog = listOf(
@@ -426,6 +441,7 @@ private fun PluginsRoute(
             }
         },
         onOpenPluginSettings = onOpenPluginSettings,
+        onOpenSettings = onOpenSettings,
     )
 }
 
