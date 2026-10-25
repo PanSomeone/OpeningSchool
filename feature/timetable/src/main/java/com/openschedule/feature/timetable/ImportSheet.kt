@@ -16,6 +16,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Extension
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.School
@@ -43,6 +44,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import com.openschedule.core.data.InstalledModule
 import com.openschedule.core.model.TimetableImporter
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -54,6 +56,8 @@ fun ImportSheet(
     onRefresh: () -> Unit,
     onImport: (TimetableImporter, Map<String, String>) -> Unit,
     onOpenWeb: (name: String, url: String) -> Unit,
+    modules: List<InstalledModule> = emptyList(),
+    onOpenModule: (InstalledModule) -> Unit = {},
     onDismiss: () -> Unit,
 ) {
     var selected by remember { mutableStateOf<TimetableImporter?>(null) }
@@ -99,6 +103,15 @@ fun ImportSheet(
                         subtitle = portal.note,
                         enabled = !importing,
                     ) { onOpenWeb(portal.name, portal.url) }
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                }
+                modules.forEach { module ->
+                    ImportChoice(
+                        icon = Icons.Filled.Extension,
+                        title = module.manifest.name,
+                        subtitle = module.manifest.description.ifBlank { "扩展导入模块" },
+                        enabled = !importing,
+                    ) { onOpenModule(module) }
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                 }
                 ImportChoice(

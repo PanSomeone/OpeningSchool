@@ -6,6 +6,7 @@ import com.openschedule.adapter.zhengfang.ZhengfangImporter
 import com.openschedule.core.data.AnnouncementStore
 import com.openschedule.core.data.AppLog
 import com.openschedule.core.data.ExternalAdapterCatalog
+import com.openschedule.core.data.PluginModuleStore
 import com.openschedule.core.data.SettingsStore
 import com.openschedule.core.data.TimetableStore
 import com.openschedule.core.model.TimetableImporter
@@ -34,6 +35,7 @@ class AppGraph(context: Context) {
     val settingsStore = SettingsStore(context)
     val weatherStore = WeatherStore(context)
     val announcementStore = AnnouncementStore(context)
+    val moduleStore = PluginModuleStore(context)
     val externalAdapters = ExternalAdapterCatalog(context)
 
     /** Adapters compiled into this APK. Runtime ones come from [externalAdapters]. */

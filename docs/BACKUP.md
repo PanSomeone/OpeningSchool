@@ -140,6 +140,16 @@ git show backup/pre-iteration-2026-10-25:path/to/file
 - 热水小组件改用 `BoxWithConstraints`：高度不足 170dp 时使用单行「状态 · 设备」并隐藏第二行，图标/内边距收紧；电源按钮移到底部右侧，避免和右上角拖动点重叠。
 - 保留公告小圆点、Gitee 优先更新与 GitHub 备用下载。
 
+## 2026-10-26 beta17
+
+- 版本：`1.0.0-beta17`（versionCode 18）
+- SHA-256：`04d7e572e5939ea97349d3b2111518f1302324fc3237a87d4a3e81d924307178`
+- 插件市场改为应用内 JS 模块：`.osplugin` 下载、SHA-256 校验、解压到 `filesDir/modules/<id>/`、启用/移除，不再安装 APK。
+- 新增 Rhino 沙箱（无 Java/Android/网络，只暴露 Jsoup 只读 host API，6 秒超时）；模块类型 `web-importer` 会出现在课表导入列表。
+- 新增示例模块与 `asset://` 内置目录；市场目录改为 Gitee 优先、GitHub 备用。
+- 新增 [PLUGIN_DEVELOPMENT.md](PLUGIN_DEVELOPMENT.md)，README 顶部加入开发/审核/上架入口。
+- 旧外部 APK 适配器保留兼容，但目录和插件页不再推广 APK 插件。
+
 ## 当前验证记录
 
 - 全部单元测试通过（新增华农课表/成绩解析、版本比较回归测试）。

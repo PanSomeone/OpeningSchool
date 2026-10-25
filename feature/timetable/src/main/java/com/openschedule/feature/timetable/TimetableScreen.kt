@@ -57,6 +57,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.openschedule.core.data.InstalledModule
+import com.openschedule.core.data.ModuleManifest
 import com.openschedule.core.model.Course
 import com.openschedule.core.model.WeekMath
 import com.openschedule.core.ui.EmptyState
@@ -66,7 +68,11 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneOffset
 
-private data class WebTarget(val name: String, val url: String)
+private data class WebTarget(
+    val name: String,
+    val url: String,
+    val module: InstalledModule? = null,
+)
 
 @Composable
 fun TimetableScreen(
@@ -78,6 +84,12 @@ fun TimetableScreen(
     val settings by viewModel.settings.collectAsStateWithLifecycle()
     val week by viewModel.week.collectAsStateWithLifecycle()
     val importers by viewModel.importers.collectAsStateWithLifecycle()
+    val webModules by viewModel.webModules.collectAsStateWithLifecycle()
+    val importerModules = webModules.filter {
+        it.enabled &&
+            it.manifest.type == ModuleManifest.TYPE_WEB_IMPORTER &&
+            it.manifest.startUrl.isNotBlank()
+    }
     val loadingImporters by viewModel.loadingImporters.collectAsStateWithLifecycle()
     val importing by viewModel.importing.collectAsStateWithLifecycle()
     val pendingImport by viewModel.pendingImport.collectAsStateWithLifecycle()
@@ -262,6 +274,15 @@ fun TimetableScreen(
                 showImport = false
                 webTarget = WebTarget(name, url)
             },
+            modules = importerModules,
+            onOpenModule = { module ->
+                showImport = false
+                webTarget = WebTarget(
+                    name = module.manifest.name,
+                    url = module.manifest.startUrl,
+                    module = module,
+                )
+            },
             onDismiss = { showImport = false },
         )
     }
@@ -275,7 +296,14 @@ fun TimetableScreen(
             busy = importing,
             error = error,
             onErrorConsumed = viewModel::consumeError,
-            onCapture = { pages -> viewModel.importHtml(pages, "${target.name}课表") },
+            onCapture = { pages ->
+                val module = target.module
+                if (module != null) {
+                    viewModel.importModule(module, pages)
+                } else {
+                    viewModel.importHtml(pages, "${target.name}课表")
+                }
+            },
             onClose = {
                 webTarget = null
                 viewModel.consumeError()

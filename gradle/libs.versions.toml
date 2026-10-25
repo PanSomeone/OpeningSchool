@@ -10,6 +10,7 @@ okhttp = "5.2.1"
 kotlinxSerialization = "1.9.0"
 kotlinxCoroutines = "1.10.2"
 jsoup = "1.16.1"
+rhino = "1.7.15"
 junit = "4.13.2"
 coroutinesTest = "1.10.2"
 
@@ -38,6 +39,7 @@ kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-
 kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "coroutinesTest" }
 
 jsoup = { group = "org.jsoup", name = "jsoup", version.ref = "jsoup" }
+rhino = { group = "org.mozilla", name = "rhino", version.ref = "rhino" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 
 [plugins]

@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.openschedule.core.data.AppLog
+import com.openschedule.core.data.PluginModuleStore
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
@@ -41,7 +42,15 @@ data class MarketPlugin(
     val sizeBytes: Long = 0,
     val packageName: String = "",
     val iconKey: String = "extension",
-)
+    val type: String = TYPE_APK,
+) {
+    val isModule: Boolean get() = type == TYPE_MODULE
+
+    companion object {
+        const val TYPE_APK = "apk"
+        const val TYPE_MODULE = "module"
+    }
+}
 
 sealed interface MarketDownload {
     data object Idle : MarketDownload
@@ -53,6 +62,7 @@ sealed interface MarketDownload {
 
 class PluginMarketViewModel(
     private val context: Context,
+    private val moduleStore: PluginModuleStore,
 ) : ViewModel() {
 
     private val json = Json { ignoreUnknownKeys = true; encodeDefaults = true }
@@ -97,7 +107,9 @@ class PluginMarketViewModel(
     }
 
     fun refreshInstalled() {
-        val installed = _plugins.value.mapNotNullTo(mutableSetOf()) { plugin ->
+        val installed = moduleStore.modules.value
+            .mapTo(mutableSetOf()) { it.manifest.id }
+        _plugins.value.mapNotNullTo(installed) { plugin ->
             if (plugin.packageName.isBlank()) {
                 null
             } else {
@@ -109,6 +121,34 @@ class PluginMarketViewModel(
             }
         }
         _installed.value = installed
+    }
+
+    fun installModule(plugin: MarketPlugin, file: File) {
+        viewModelScope.launch {
+            val result = withContext(Dispatchers.IO) {
+                moduleStore.install(file, plugin.sha256)
+            }
+            result.fold(
+                onSuccess = {
+                    file.delete()
+                    refreshInstalled()
+                    _downloads.update { current -> current - plugin.id }
+                    AppLog.i("Market", "模块 ${plugin.id} 已安装")
+                },
+                onFailure = { error ->
+                    _downloads.update {
+                        it + (plugin.id to MarketDownload.Failed(
+                            error.message ?: "模块安装失败",
+                        ))
+                    }
+                },
+            )
+        }
+    }
+
+    fun uninstallModule(id: String) {
+        moduleStore.remove(id)
+        refreshInstalled()
     }
 
     fun download(ids: Collection<String>) {
@@ -140,7 +180,11 @@ class PluginMarketViewModel(
     }
 
     private fun loadCatalog(): MarketCatalog? {
-        val remote = runCatching { fetchCatalog(REMOTE_CATALOG) }.getOrNull()
+        val remote = REMOTE_CATALOGS.firstNotNullOfOrNull { url ->
+            runCatching { fetchCatalog(url) }
+                .getOrNull()
+                ?.takeIf { it.plugins.isNotEmpty() }
+        }
         if (remote != null && remote.plugins.isNotEmpty()) {
             prefs.edit().putString(KEY_CACHE, json.encodeToString(remote)).apply()
             return remote
@@ -175,8 +219,13 @@ class PluginMarketViewModel(
     private fun downloadOne(plugin: MarketPlugin) {
         _downloads.update { it + (plugin.id to MarketDownload.Downloading(0f)) }
         val dir = File(context.cacheDir, "market").apply { mkdirs() }
-        val target = File(dir, "${plugin.id}-${plugin.version}.apk")
+        val suffix = if (plugin.isModule) "osplugin" else "apk"
+        val target = File(dir, "${plugin.id}-${plugin.version}.$suffix")
         val temp = File(dir, "${plugin.id}.part")
+        if (plugin.url.startsWith("asset://")) {
+            downloadBundled(plugin, temp, target)
+            return
+        }
         var connection: HttpURLConnection? = null
         try {
             val http = URL(plugin.url).openConnection() as HttpURLConnection
@@ -249,10 +298,60 @@ class PluginMarketViewModel(
         }
     }
 
+    private fun downloadBundled(plugin: MarketPlugin, temp: File, target: File) {
+        try {
+            val assetName = plugin.url.removePrefix("asset://")
+            context.assets.open(assetName).use { input ->
+                temp.outputStream().use { output -> input.copyTo(output) }
+            }
+            if (plugin.sha256.isNotBlank()) {
+                val hash = sha256(temp)
+                if (!hash.equals(plugin.sha256, ignoreCase = true)) {
+                    temp.delete()
+                    _downloads.update {
+                        it + (plugin.id to MarketDownload.Failed("SHA-256 校验失败"))
+                    }
+                    return
+                }
+            }
+            if (target.isFile) target.delete()
+            if (!temp.renameTo(target)) {
+                temp.copyTo(target, overwrite = true)
+                temp.delete()
+            }
+            _downloads.update {
+                it + (plugin.id to MarketDownload.Ready(
+                    file = target,
+                    verified = plugin.sha256.isNotBlank(),
+                ))
+            }
+        } catch (error: Exception) {
+            temp.delete()
+            _downloads.update {
+                it + (plugin.id to MarketDownload.Failed(error.message ?: "模块读取失败"))
+            }
+        }
+    }
+
+    private fun sha256(file: File): String {
+        val digest = MessageDigest.getInstance("SHA-256")
+        file.inputStream().use { input ->
+            val buffer = ByteArray(32 * 1024)
+            while (true) {
+                val read = input.read(buffer)
+                if (read < 0) break
+                digest.update(buffer, 0, read)
+            }
+        }
+        return digest.digest().joinToString("") { "%02x".format(it.toInt() and 0xff) }
+    }
+
     private companion object {
         const val MAX_PARALLEL = 3
-        const val REMOTE_CATALOG =
-            "https://raw.githubusercontent.com/PanSomeone/OpeningSchool/main/market/catalog.json"
+        val REMOTE_CATALOGS = listOf(
+            "https://gitee.com/PanSomeone/OpeningSchool/raw/main/market/catalog.json",
+            "https://raw.githubusercontent.com/PanSomeone/OpeningSchool/main/market/catalog.json",
+        )
         const val ASSET_CATALOG = "market_catalog.json"
         const val KEY_CACHE = "catalog_cache"
     }

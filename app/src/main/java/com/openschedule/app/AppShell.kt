@@ -57,6 +57,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.openschedule.core.data.Announcement
+import com.openschedule.core.data.PluginModuleStore
 import com.openschedule.core.data.SettingsStore
 import com.openschedule.core.model.MAX_NAV_SLOTS
 import com.openschedule.core.model.NavSlot
@@ -202,6 +203,7 @@ fun AppShell(graph: AppGraph) {
                         settingsStore = graph.settingsStore,
                         builtInImporters = graph.builtInImporters,
                         externalAdapters = graph.externalAdapters,
+                        moduleStore = graph.moduleStore,
                     )
                 }
                 TimetableScreen(
@@ -239,6 +241,7 @@ fun AppShell(graph: AppGraph) {
                 PluginsRoute(
                     viewModel = viewModel,
                     settingsStore = graph.settingsStore,
+                    moduleStore = graph.moduleStore,
                     onOpenPluginSettings = { pluginSettingsId = it },
                     onOpenSettings = {
                         selectedId = "settings"
@@ -401,6 +404,7 @@ fun AppShell(graph: AppGraph) {
                                     settingsStore = graph.settingsStore,
                                     builtInImporters = graph.builtInImporters,
                                     externalAdapters = graph.externalAdapters,
+                                    moduleStore = graph.moduleStore,
                                 )
                             }
                             TimetableSettingsScreen(
@@ -454,6 +458,7 @@ fun AppShell(graph: AppGraph) {
 private fun PluginsRoute(
     viewModel: PluginsViewModel,
     settingsStore: SettingsStore,
+    moduleStore: PluginModuleStore,
     onOpenPluginSettings: (String) -> Unit,
     onOpenSettings: () -> Unit,
 ) {
@@ -479,6 +484,7 @@ private fun PluginsRoute(
     PluginsScreen(
         viewModel = viewModel,
         plugins = plugins,
+        moduleStore = moduleStore,
         onInstall = { id ->
             settingsStore.update { it.copy(disabledPlugins = it.disabledPlugins - id) }
         },

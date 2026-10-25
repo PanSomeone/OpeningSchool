@@ -1,29 +1,17 @@
 {
-  "version": 1,
+  "version": 2,
   "plugins": [
     {
-      "id": "zhengfang-external",
-      "name": "正方教务（独立版）",
-      "description": "独立 APK 适配器，账号密码登录新版正方教务；安装后回到本页刷新即可使用。",
+      "id": "demo.web-importer",
+      "name": "示例网页导入模块",
+      "description": "应用内 JS 模块示例：无需安装 APK，添加后从「导入课表」选择它即可体验网页解析。",
       "category": "教务适配",
       "version": "1.0.0",
-      "url": "https://github.com/PanSomeone/OpeningSchool/releases/download/adapter-v1/ZhengfangAdapter.apk",
-      "sha256": "c06f4f91ac8859658aca925fcfd711c85abbb20ab23d93be23f908ffa62f897f",
-      "sizeBytes": 1950704,
-      "packageName": "com.openschedule.adapter.zhengfang.external",
-      "iconKey": "school"
-    },
-    {
-      "id": "sample-external",
-      "name": "示例课表适配器",
-      "description": "无需登录，返回一份演示课表，用于验证下载、安装与导入流程。",
-      "category": "工具",
-      "version": "1.0.0",
-      "url": "https://github.com/PanSomeone/OpeningSchool/releases/download/adapter-v1/SampleAdapter.apk",
-      "sha256": "7f677b7e21afd7fd494b79b4a1b1df45c14631c1814c821d07510ac631b6e7cb",
-      "sizeBytes": 903766,
-      "packageName": "com.openschedule.adapter.sample.external",
-      "iconKey": "extension"
+      "url": "asset://demo-web-importer.osplugin",
+      "sha256": "66950a683acb5e3485d65e71c75876a488302551722f688671d75b520e176c97",
+      "sizeBytes": 815,
+      "iconKey": "extension",
+      "type": "module"
     }
   ]
 }

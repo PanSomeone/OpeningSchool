@@ -9,3 +9,8 @@
 # Jsoup resolves part of its selector/evaluator implementation dynamically.
 -keep class org.jsoup.** { *; }
 -dontwarn org.jsoup.**
+
+# Rhino JS runtime for in-app plugin modules
+-keep class org.mozilla.javascript.** { *; }
+-dontwarn org.mozilla.javascript.**
+-dontwarn java.beans.**

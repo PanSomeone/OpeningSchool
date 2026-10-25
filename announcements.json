@@ -1,10 +1,17 @@
 {
   "announcements": [
     {
+      "id": "2026-10-26-beta17",
+      "title": "插件改为应用内模块",
+      "date": "2026-10-26",
+      "pinned": true,
+      "content": "插件市场不再安装 APK：新插件是 .osplugin 应用内模块，下载并校验后直接启用。\n\n网页导入模块会出现在「导入课表 → 从学校官网导入」列表。\n\n开发、审核与上架流程见 GitHub 仓库 docs/PLUGIN_DEVELOPMENT.md。"
+    },
+    {
       "id": "2026-10-25-beta14",
       "title": "Gitee 更新源已上线",
       "date": "2026-10-25",
-      "pinned": true,
+      "pinned": false,
       "content": "从现在起，应用内「检查更新」默认从 Gitee 获取更新清单和安装包，GitHub 作为备用源。\n\nGitee 仓库只发布安装包与更新清单，源代码仍保留在 GitHub。\n\n如果 Gitee 暂时无法访问，应用会自动回退到 GitHub 清单与下载地址。"
     },
     {

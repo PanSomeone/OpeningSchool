@@ -4,6 +4,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.openschedule.core.data.AppLog
 import com.openschedule.core.data.ExternalAdapterCatalog
+import com.openschedule.core.data.InstalledModule
+import com.openschedule.core.data.ModuleRuntime
+import com.openschedule.core.data.PluginModuleStore
 import com.openschedule.core.data.SettingsStore
 import com.openschedule.core.data.TimetableStore
 import com.openschedule.core.data.WebScheduleParser
@@ -33,11 +36,13 @@ class TimetableViewModel(
     private val settingsStore: SettingsStore,
     private val builtInImporters: List<TimetableImporter>,
     private val externalAdapters: ExternalAdapterCatalog,
+    moduleStore: PluginModuleStore,
 ) : ViewModel() {
 
     val timetable: StateFlow<Timetable> = timetableStore.timetable
     val timetables = timetableStore.collection
     val settings: StateFlow<AppSettings> = settingsStore.settings
+    val webModules = moduleStore.modules
 
     private val _week = MutableStateFlow(currentWeek())
     val week: StateFlow<Int> = _week.asStateFlow()
@@ -337,6 +342,35 @@ class TimetableViewModel(
                     _error.value = it.message ?: "没有从页面里识别出课表"
                 },
             )
+            _importing.value = false
+        }
+    }
+
+    fun importModule(module: InstalledModule, pages: List<String>) {
+        if (_importing.value) return
+        _importing.value = true
+        viewModelScope.launch {
+            val result = withContext(Dispatchers.IO) {
+                ModuleRuntime.parse(module, pages)
+            }
+            when (result) {
+                is ImportResult.Success -> {
+                    AppLog.i(
+                        "Import",
+                        "模块 ${module.manifest.id}: ${result.timetable.courses.size} 门课",
+                    )
+                    _pendingImport.value = ImportPreview(
+                        timetable = result.timetable,
+                        warnings = result.warnings,
+                        source = "模块 · ${module.manifest.name}",
+                    )
+                }
+
+                is ImportResult.Failure -> {
+                    AppLog.w("Import", "模块解析失败: ${result.message}")
+                    _error.value = result.message
+                }
+            }
             _importing.value = false
         }
     }

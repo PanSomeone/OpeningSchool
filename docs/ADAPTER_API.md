@@ -1,6 +1,8 @@
-# 外部适配器协议 v1
+# 外部适配器协议 v1（旧版兼容）
 
-开源大学不加载第三方代码。第三方适配器是一个**独立 APK 里的普通 Service**，通过 Android `Messenger` 与本应用交换 JSON 字符串。本应用只在用户点击「导入」时绑定并发送凭证。
+> **新插件请使用应用内 JS 模块。** 格式、JS API、审核和发布见 [PLUGIN_DEVELOPMENT.md](PLUGIN_DEVELOPMENT.md)。本文档仅用于兼容已经存在的 APK 适配器；插件市场目录不再发布新的 APK 插件。
+
+旧版第三方适配器是一个**独立 APK 里的普通 Service**，通过 Android `Messenger` 与本应用交换 JSON 字符串。本应用只在用户点击「导入」时绑定并发送凭证。
 
 ## 1. 适配器 APK 需要声明的内容
 

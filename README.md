@@ -1,7 +1,10 @@
 # 开源大学（OpeningSchool）
-功能说明
 
-> 当前测试版：`1.0.0-beta16`（versionCode 17） · [下载与更新](https://gitee.com/PanSomeone/OpeningSchool/releases)
+> 插件开发、打包、审核与上架：[docs/PLUGIN_DEVELOPMENT.md](docs/PLUGIN_DEVELOPMENT.md)
+
+> 当前测试版：`1.0.0-beta17`（versionCode 18） · [下载与更新](https://gitee.com/PanSomeone/OpeningSchool/releases)
+
+功能说明
 
 ## 运行环境
 - **平台**：Android（minSdk 26）
@@ -42,10 +45,11 @@
 
 ### 插件系统
 - 独立「插件市场」负责添加插件；已安装列表显示在导航栏及插件管理页，支持移除和设置
-- 在线插件支持搜索、分类、单项下载、全选批量下载；最多 3 个任务并行，下载后校验 SHA-256
-- 安装使用系统安装器，安装后刷新即可发现外部适配器
-- 第三方适配器以独立 APK 形式提供，通过 Messenger JSON 通信，宿主不加载外部代码
-- 目录格式与发布流程见 [docs/PLUGIN_MARKET.md](docs/PLUGIN_MARKET.md)
+- 在线插件以应用内 JS 模块（`.osplugin`）分发：下载、SHA-256 校验、本地启用/移除，**不安装 APK**
+- 网页导入模块会自动出现在课表导入的「从学校官网导入」列表，解析用户登录后抓取的页面
+- 支持搜索、分类、单项下载、全选批量下载；最多 3 个任务并行
+- 旧的「外部 APK 适配器」机制保留用于兼容，但市场目录不再发布新的 APK 插件
+- 开发、审核与发布见 [docs/PLUGIN_DEVELOPMENT.md](docs/PLUGIN_DEVELOPMENT.md)；目录格式见 [docs/PLUGIN_MARKET.md](docs/PLUGIN_MARKET.md)
 
 ### 成绩插件（GPA）
 - 逐门成绩按学期分组展示，每门课可单独勾选是否计入 GPA

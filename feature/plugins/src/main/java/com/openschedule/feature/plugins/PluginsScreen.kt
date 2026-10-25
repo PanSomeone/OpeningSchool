@@ -26,6 +26,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Extension
 import androidx.compose.material.icons.filled.InstallMobile
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
@@ -63,8 +64,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.openschedule.core.data.PluginModuleStore
 import com.openschedule.core.model.TimetableImporter
-import com.openschedule.core.plugin.AdapterProtocol
 import com.openschedule.core.ui.LocalFloatingNavSpace
 import com.openschedule.core.ui.NavIcons
 import com.openschedule.core.ui.ScreenHeader
@@ -86,6 +87,7 @@ data class BuiltInPluginUi(
 fun PluginsScreen(
     viewModel: PluginsViewModel,
     plugins: List<BuiltInPluginUi>,
+    moduleStore: PluginModuleStore,
     onInstall: (String) -> Unit,
     onUninstall: (String) -> Unit,
     onOpenPluginSettings: (String) -> Unit,
@@ -102,6 +104,7 @@ fun PluginsScreen(
         PluginMarket(
             plugins = plugins,
             importers = importers,
+            moduleStore = moduleStore,
             loading = loading,
             onRefresh = viewModel::refresh,
             onBack = { showMarket = false },
@@ -285,6 +288,7 @@ private fun PluginInstalledRow(
 private fun PluginMarket(
     plugins: List<BuiltInPluginUi>,
     importers: List<TimetableImporter>,
+    moduleStore: PluginModuleStore,
     loading: Boolean,
     onRefresh: () -> Unit,
     onBack: () -> Unit,
@@ -298,7 +302,10 @@ private fun PluginMarket(
             object : ViewModelProvider.Factory {
                 @Suppress("UNCHECKED_CAST")
                 override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                    return PluginMarketViewModel(context.applicationContext) as T
+                    return PluginMarketViewModel(
+                        context.applicationContext,
+                        moduleStore,
+                    ) as T
                 }
             }
         },
@@ -410,7 +417,14 @@ private fun PluginMarket(
                         selected = emptySet()
                     },
                     onRetryCatalog = marketViewModel::refresh,
-                    onInstall = { file -> installApk(context, file) },
+                    onInstall = { plugin, file ->
+                        if (plugin.isModule) {
+                            marketViewModel.installModule(plugin, file)
+                        } else {
+                            installApk(context, file)
+                        }
+                    },
+                    onRemoveModule = marketViewModel::uninstallModule,
                 )
             }
 
@@ -555,25 +569,18 @@ private fun PluginMarket(
             }
 
             if (showProtocol) {
-            SectionTitle("第三方接入")
+            SectionTitle("模块开发")
             Surface(
                 shape = RoundedCornerShape(16.dp),
                 color = MaterialTheme.colorScheme.surface,
                 modifier = Modifier.fillMaxWidth(),
             ) {
-                Column(
+                Text(
+                    text = "插件以 .osplugin 应用内模块分发，不安装 APK。开发、审核与上架见仓库 docs/PLUGIN_DEVELOPMENT.md。",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp),
-                ) {
-                    Text(
-                        text = "适配器以独立 APK 安装，通过绑定 Service 返回 JSON 课表，无需动态加载代码。",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    ProtocolRow("Action", AdapterProtocol.ACTION)
-                    ProtocolRow("Permission", AdapterProtocol.PERMISSION)
-                    ProtocolRow("API", AdapterProtocol.API_VERSION.toString())
-                }
+                )
             }
             }
         }
@@ -598,7 +605,8 @@ private fun OnlinePluginsSection(
     onSelectAll: (Set<String>) -> Unit,
     onDownload: (Set<String>) -> Unit,
     onRetryCatalog: () -> Unit,
-    onInstall: (File) -> Unit,
+    onInstall: (MarketPlugin, File) -> Unit,
+    onRemoveModule: (String) -> Unit,
 ) {
     SectionTitle("在线插件")
     Surface(
@@ -704,6 +712,7 @@ private fun OnlinePluginsSection(
                     onToggle = { onToggle(plugin.id) },
                     onDownload = { onDownload(setOf(plugin.id)) },
                     onInstall = onInstall,
+                    onRemoveModule = onRemoveModule,
                 )
                 if (index != plugins.lastIndex) {
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
@@ -722,7 +731,8 @@ private fun OnlinePluginRow(
     selectable: Boolean,
     onToggle: () -> Unit,
     onDownload: () -> Unit,
-    onInstall: (File) -> Unit,
+    onInstall: (MarketPlugin, File) -> Unit,
+    onRemoveModule: (String) -> Unit,
 ) {
     Row(
         modifier = Modifier
@@ -758,6 +768,11 @@ private fun OnlinePluginRow(
                     Tag("已安装")
                 } else if (plugin.version.isNotBlank()) {
                     Tag("v${plugin.version}")
+                }
+                if (installed && plugin.isModule) {
+                    TextButton(onClick = { onRemoveModule(plugin.id) }) {
+                        Text("移除", color = MaterialTheme.colorScheme.error)
+                    }
                 }
             }
             if (plugin.description.isNotBlank()) {
@@ -823,14 +838,14 @@ private fun OnlinePluginRow(
                         },
                         modifier = Modifier.weight(1f),
                     )
-                    FilledTonalButton(onClick = { onInstall(download.file) }) {
+                    FilledTonalButton(onClick = { onInstall(plugin, download.file) }) {
                         Icon(
-                            Icons.Filled.InstallMobile,
+                            if (plugin.isModule) Icons.Filled.Extension else Icons.Filled.InstallMobile,
                             contentDescription = null,
                             modifier = Modifier.size(16.dp),
                         )
                         Spacer(Modifier.width(5.dp))
-                        Text("安装")
+                        Text(if (plugin.isModule) "启用模块" else "安装")
                     }
                 }
 
@@ -926,18 +941,3 @@ private fun Tag(text: String) {
     }
 }
 
-@Composable
-private fun ProtocolRow(label: String, value: String) {
-    Column(modifier = Modifier.fillMaxWidth()) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        Text(
-            text = value,
-            style = MaterialTheme.typography.bodySmall,
-            fontFamily = FontFamily.Monospace,
-        )
-    }
-}
