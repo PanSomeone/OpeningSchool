@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -37,11 +38,14 @@ import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.SystemUpdate
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
@@ -69,9 +73,13 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.openschedule.core.data.AppLog
 import com.openschedule.core.model.MAX_NAV_SLOTS
 import com.openschedule.core.model.NavSlot
@@ -85,6 +93,7 @@ import com.openschedule.core.ui.SettingsCard
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.util.Locale
 import kotlin.math.roundToInt
 
 @Composable
@@ -104,11 +113,22 @@ fun SettingsScreen(
 
     var iconPickerFor by remember { mutableStateOf<NavSlot?>(null) }
     var renaming by remember { mutableStateOf<NavSlot?>(null) }
-    var aboutDialog by remember { mutableStateOf<AboutDialog?>(null) }
     var showWallpaper by remember { mutableStateOf(false) }
     var exportingLog by remember { mutableStateOf(false) }
     var showSponsor by remember { mutableStateOf(false) }
+    var showUpdate by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
+    val updateViewModel: UpdateViewModel = viewModel(
+        factory = remember(context) {
+            object : ViewModelProvider.Factory {
+                @Suppress("UNCHECKED_CAST")
+                override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                    return UpdateViewModel(context.applicationContext) as T
+                }
+            }
+        },
+    )
+    val updateState by updateViewModel.state.collectAsStateWithLifecycle()
     val wallpaperStatus = when {
         settings.pageWallpapers.isNotEmpty() && settings.appWallpaper != null ->
             "全局 + ${settings.pageWallpapers.size} 页"
@@ -312,17 +332,13 @@ fun SettingsScreen(
                 AboutRow(
                     icon = Icons.Filled.Feedback,
                     title = "反馈",
-                    value = if (FEEDBACK_URL.isBlank()) "未配置" else "GitHub Issues",
+                    value = "GitHub Issues",
                     onClick = {
-                        if (FEEDBACK_URL.isBlank()) {
-                            aboutDialog = AboutDialog.FEEDBACK
-                        } else {
-                            val opened = runCatching {
-                                context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(FEEDBACK_URL)))
-                            }.isSuccess
-                            if (!opened) {
-                                scope.launch { snackbar.showSnackbar("没有可用的浏览器") }
-                            }
+                        val opened = runCatching {
+                            context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(FEEDBACK_URL)))
+                        }.isSuccess
+                        if (!opened) {
+                            scope.launch { snackbar.showSnackbar("没有可用的浏览器") }
                         }
                     },
                 )
@@ -405,12 +421,22 @@ fun SettingsScreen(
                 AboutRow(
                     icon = Icons.Filled.SystemUpdate,
                     title = "检查更新",
-                    value = null,
+                    value = when (val state = updateState) {
+                        is UpdateState.Available -> state.info.version
+                        is UpdateState.Downloading -> "下载中"
+                        is UpdateState.Ready -> "待安装"
+                        is UpdateState.UpToDate -> "已是最新"
+                        else -> null
+                    },
                     onClick = {
-                        if (UPDATE_URL.isBlank()) {
-                            aboutDialog = AboutDialog.UPDATE
-                        } else {
-                            context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(UPDATE_URL)))
+                        showUpdate = true
+                        when (updateState) {
+                            is UpdateState.Idle,
+                            is UpdateState.UpToDate,
+                            is UpdateState.Failed,
+                            -> updateViewModel.check()
+
+                            else -> Unit
                         }
                     },
                 )
@@ -455,28 +481,21 @@ fun SettingsScreen(
         )
     }
 
-    aboutDialog?.let { dialog ->
-        AlertDialog(
-            onDismissRequest = { aboutDialog = null },
-            title = {
-                Text(
-                    when (dialog) {
-                        AboutDialog.UPDATE -> "检查更新"
-                        AboutDialog.FEEDBACK -> "反馈"
-                    },
-                )
+    if (showUpdate) {
+        UpdateSheet(
+            state = updateState,
+            currentVersion = versionName,
+            onCheck = updateViewModel::check,
+            onDownload = updateViewModel::download,
+            onInstall = {
+                if (!updateViewModel.install()) {
+                    scope.launch {
+                        snackbar.showSnackbar("无法启动安装器，请允许安装未知应用")
+                    }
+                }
             },
-            text = {
-                Text(
-                    when (dialog) {
-                        AboutDialog.UPDATE -> "更新地址尚未配置；代码仓库建立后会接入。"
-                        AboutDialog.FEEDBACK -> "反馈地址尚未配置；配置代码仓库后可直接打开 Issues。"
-                    },
-                )
-            },
-            confirmButton = {
-                TextButton(onClick = { aboutDialog = null }) { Text("知道了") }
-            },
+            onOpenRelease = updateViewModel::openReleasePage,
+            onDismiss = { showUpdate = false },
         )
     }
 
@@ -484,8 +503,6 @@ fun SettingsScreen(
         SponsorSheet(onDismiss = { showSponsor = false })
     }
 }
-
-private enum class AboutDialog { UPDATE, FEEDBACK }
 
 private enum class SponsorPlatform { WECHAT, ALIPAY }
 
@@ -571,6 +588,155 @@ private fun SponsorSheet(onDismiss: () -> Unit) {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun UpdateSheet(
+    state: UpdateState,
+    currentVersion: String,
+    onCheck: () -> Unit,
+    onDownload: () -> Unit,
+    onInstall: () -> Unit,
+    onOpenRelease: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+        containerColor = MaterialTheme.colorScheme.surface,
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 20.dp)
+                .padding(bottom = 28.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            Text("软件更新", style = MaterialTheme.typography.titleLarge)
+            when (state) {
+                UpdateState.Idle -> {
+                    Text("检查是否有新的测试版", style = MaterialTheme.typography.bodyMedium)
+                    Button(onClick = onCheck, modifier = Modifier.fillMaxWidth()) {
+                        Text("检查更新")
+                    }
+                }
+
+                UpdateState.Checking -> Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+                    Text("正在检查更新…", style = MaterialTheme.typography.bodyMedium)
+                }
+
+                is UpdateState.UpToDate -> {
+                    Text("已是最新版本", style = MaterialTheme.typography.titleMedium)
+                    Text(
+                        text = "当前 v${state.currentVersion} · 最新 v${state.latestVersion}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    TextButton(onClick = onCheck) { Text("重新检查") }
+                }
+
+                is UpdateState.Available -> {
+                    Text(
+                        text = "发现新版本 ${state.info.version}",
+                        style = MaterialTheme.typography.titleMedium,
+                    )
+                    Text(
+                        text = "当前 v$currentVersion",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    if (state.info.notes.isNotBlank()) {
+                        Surface(
+                            shape = RoundedCornerShape(12.dp),
+                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f),
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Text(
+                                text = state.info.notes,
+                                style = MaterialTheme.typography.bodySmall,
+                                modifier = Modifier.padding(12.dp),
+                                maxLines = 10,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        }
+                    }
+                    Text(
+                        text = "安装包 ${formatUpdateSize(state.info.sizeBytes)}",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Button(onClick = onDownload, modifier = Modifier.fillMaxWidth()) {
+                        Text("下载更新")
+                    }
+                    TextButton(onClick = onOpenRelease) { Text("在浏览器查看") }
+                }
+
+                is UpdateState.Downloading -> {
+                    Text("正在下载更新", style = MaterialTheme.typography.titleMedium)
+                    LinearProgressIndicator(
+                        progress = { state.progress },
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                    Text(
+                        text = "${(state.progress * 100).toInt()}%",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+
+                is UpdateState.Ready -> {
+                    Text("下载完成", style = MaterialTheme.typography.titleMedium)
+                    Text(
+                        text = if (state.verified) "SHA-256 校验通过" else "未校验",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = if (state.verified) {
+                            MaterialTheme.colorScheme.primary
+                        } else {
+                            MaterialTheme.colorScheme.error
+                        },
+                    )
+                    Button(onClick = onInstall, modifier = Modifier.fillMaxWidth()) {
+                        Text("立即安装")
+                    }
+                    Text(
+                        text = "Android 会弹出系统安装确认",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+
+                is UpdateState.Failed -> {
+                    Text("更新失败", style = MaterialTheme.typography.titleMedium)
+                    Text(
+                        text = state.message,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.error,
+                    )
+                    Button(onClick = onCheck, modifier = Modifier.fillMaxWidth()) {
+                        Text("重试")
+                    }
+                    TextButton(onClick = onOpenRelease) { Text("在浏览器打开") }
+                }
+            }
+            TextButton(onClick = onDismiss, modifier = Modifier.fillMaxWidth()) { Text("关闭") }
+        }
+    }
+}
+
+private fun formatUpdateSize(bytes: Long): String = when {
+    bytes <= 0 -> "未知大小"
+    bytes >= 1024 * 1024 -> String.format(Locale.US, "%.1f MB", bytes / 1024.0 / 1024.0)
+    else -> "${bytes / 1024} KB"
+}
+
 @Composable
 private fun AboutRow(
     icon: ImageVector,
@@ -625,14 +791,10 @@ private fun appVersionName(context: Context): String = runCatching {
         context.packageManager.getPackageInfo(context.packageName, 0)
     }
     info.versionName
-}.getOrNull().orEmpty().ifBlank { "1.0.0-beta2" }
+}.getOrNull().orEmpty().ifBlank { "1.0.0-beta3" }
 
 private const val AUTHOR = "PanSomeone"
 
-/** Set to the repository releases page. */
-private const val UPDATE_URL = "https://github.com/PanSomeone/OpeningSchool/releases"
-
-/** Set to the repository issues page. */
 private const val FEEDBACK_URL = "https://github.com/PanSomeone/OpeningSchool/issues"
 
 

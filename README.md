@@ -1,7 +1,7 @@
 # 开源大学（OpeningSchool）
 功能说明
 
-> 当前测试版：`1.0.0-beta2`（versionCode 3） · [下载与更新](https://github.com/PanSomeone/OpeningSchool/releases)
+> 当前测试版：`1.0.0-beta3`（versionCode 4） · [下载与更新](https://github.com/PanSomeone/OpeningSchool/releases)
 
 ## 运行环境
 - **平台**：Android（minSdk 26）
@@ -52,6 +52,7 @@
 ### 设置
 - 主题、导航栏、透明度等基础配置
 - 关于页（作者、版本号、检查更新、赞助）
+- 检查更新会显示是否有新版本；有更新时直接在应用内下载 APK，校验 SHA-256 后调起系统安装
 - 反馈直达 GitHub Issues；可导出包含版本、机型与最近日志的文本文件
 - 赞助页内置微信、支付宝收款二维码
 - 开源许可建议与备份/回滚说明见 [docs/LICENSING.md](docs/LICENSING.md)、[docs/BACKUP.md](docs/BACKUP.md)

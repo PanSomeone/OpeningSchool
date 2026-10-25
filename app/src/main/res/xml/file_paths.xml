@@ -2,4 +2,5 @@
 <paths>
     <cache-path name="logs" path="logs/" />
     <cache-path name="market" path="market/" />
+    <cache-path name="updates" path="updates/" />
 </paths>

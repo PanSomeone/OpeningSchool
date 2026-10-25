@@ -38,9 +38,18 @@ git show backup/pre-iteration-2026-10-25:path/to/file
 - Release 包启用 R8 默认混淆与资源压缩；签名密钥不公开。
 - 适配器包：`adapter-v1` 预发布（`https://github.com/PanSomeone/OpeningSchool/releases/tag/adapter-v1`），包含正方与示例两个外部适配器；目录见 `market/catalog.json`。
 
+## 2026-10-25 beta3
+
+- 版本：`1.0.0-beta3`（versionCode 4）
+- 本地产物：`app/build/outputs/apk/release/app-release.apk`
+- SHA-256：`e47ffcaf1a8796faa3bd65ece69c1c55e0cfefb4ed51ca4d28bd57dd358dcd22`
+- 新增应用内更新：`update.json` → 显示是否最新 → 应用内下载 → SHA-256 校验 → 系统安装。
+- 更新清单地址：`https://raw.githubusercontent.com/PanSomeone/OpeningSchool/main/update.json`；以后换 Gitee 只改 `UpdateViewModel.MANIFEST_URL`。
+
 ## 当前验证记录
 
-- 全部单元测试通过（新增华农课表/成绩解析回归测试）。
+- 全部单元测试通过（新增华农课表/成绩解析、版本比较回归测试）。
 - Release APK 在 API 37 模拟器冷启动约 0.9–1.1 秒，体积约 2.5 MB。
+- `update.json` 是应用内更新的清单（版本号、APK URL、SHA-256、大小）；发布新版本时同步更新。
 - 已验证：多地区天气搜索与持久化、赞助二维码、反馈跳转、日志导出、主页长按拖动换位、今日课程时间左对齐、插件市场搜索/分类/并行批量下载/SHA 校验、外部适配器发现与导入。
 - 插件市场安装仍由系统确认；未知来源权限需要用户手动允许。
