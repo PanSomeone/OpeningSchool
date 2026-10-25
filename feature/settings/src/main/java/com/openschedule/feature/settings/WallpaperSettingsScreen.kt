@@ -80,6 +80,12 @@ private sealed interface WallpaperTarget {
     data class Page(val id: String) : WallpaperTarget
 }
 
+private data class PendingWallpaper(
+    val uri: Uri,
+    val target: WallpaperTarget,
+    val label: String,
+)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WallpaperSettingsScreen(
@@ -92,31 +98,24 @@ fun WallpaperSettingsScreen(
     val scope = rememberCoroutineScope()
     val snackbar = remember { SnackbarHostState() }
     var pendingTarget by remember { mutableStateOf<WallpaperTarget?>(null) }
+    var pendingCrop by remember { mutableStateOf<PendingWallpaper?>(null) }
     var pageMenu by remember { mutableStateOf<WallpaperPage?>(null) }
     val pages = WALLPAPER_PAGES.filterNot { it.id in hiddenPluginIds }
+
+    fun labelFor(target: WallpaperTarget): String = when (target) {
+        WallpaperTarget.Global -> "全局壁纸"
+        is WallpaperTarget.Page -> {
+            val page = WALLPAPER_PAGES.firstOrNull { it.id == target.id }
+            "${page?.label ?: "页面"}壁纸"
+        }
+    }
 
     val pickImage = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         val target = pendingTarget
         pendingTarget = null
-        if (uri == null || target == null) return@rememberLauncherForActivityResult
-        val name = copyWallpaper(context, uri)
-        if (name == null) {
-            scope.launch { snackbar.showSnackbar("图片导入失败") }
-            return@rememberLauncherForActivityResult
+        if (uri != null && target != null) {
+            pendingCrop = PendingWallpaper(uri, target, labelFor(target))
         }
-        val current = viewModel.settings.value
-        val oldName = when (target) {
-            WallpaperTarget.Global -> current.appWallpaper
-            is WallpaperTarget.Page -> current.pageWallpapers[target.id]
-        }
-        val next = when (target) {
-            WallpaperTarget.Global -> current.copy(appWallpaper = name)
-            is WallpaperTarget.Page -> current.copy(
-                pageWallpapers = current.pageWallpapers + (target.id to name),
-            )
-        }
-        viewModel.update { next }
-        deleteIfUnused(context, oldName, next)
     }
 
     fun choose(target: WallpaperTarget) {
@@ -130,6 +129,33 @@ fun WallpaperSettingsScreen(
         val next = current.copy(pageWallpapers = current.pageWallpapers - pageId)
         viewModel.update { next }
         deleteIfUnused(context, oldName, next)
+    }
+
+    pendingCrop?.let { crop ->
+        WallpaperCropScreen(
+            uri = crop.uri,
+            targetLabel = crop.label,
+            onCancel = { pendingCrop = null },
+            onApply = { name ->
+                val current = viewModel.settings.value
+                val target = crop.target
+                val oldName = when (target) {
+                    WallpaperTarget.Global -> current.appWallpaper
+                    is WallpaperTarget.Page -> current.pageWallpapers[target.id]
+                }
+                val next = when (target) {
+                    WallpaperTarget.Global -> current.copy(appWallpaper = name)
+                    is WallpaperTarget.Page -> current.copy(
+                        pageWallpapers = current.pageWallpapers + (target.id to name),
+                    )
+                }
+                viewModel.update { next }
+                deleteIfUnused(context, oldName, next)
+                pendingCrop = null
+                scope.launch { snackbar.showSnackbar("壁纸已更新") }
+            },
+        )
+        return
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -355,19 +381,6 @@ private fun WallpaperThumb(
                 )
             }
         }
-    }
-}
-
-private fun copyWallpaper(context: Context, uri: Uri): String? {
-    val name = "wallpaper_${System.currentTimeMillis()}.img"
-    val file = File(context.filesDir, name)
-    return runCatching {
-        context.contentResolver.openInputStream(uri)?.use { input ->
-            file.outputStream().use { output -> input.copyTo(output) }
-        } ?: error("无法读取图片")
-        name
-    }.getOrNull().also { result ->
-        if (result == null) file.delete()
     }
 }
 

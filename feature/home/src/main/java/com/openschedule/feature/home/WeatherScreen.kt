@@ -303,7 +303,7 @@ private fun AddWeatherPlaceSheet(
             OutlinedTextField(
                 value = query,
                 onValueChange = { query = it },
-                label = { Text("城市名") },
+                label = { Text("城市 / 区县") },
                 singleLine = true,
                 trailingIcon = {
                     IconButton(

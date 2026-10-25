@@ -18,6 +18,10 @@ class WeatherStore(context: Context) {
     private val prefs = context.applicationContext
         .getSharedPreferences("openschedule_weather", Context.MODE_PRIVATE)
     private val json = Json { ignoreUnknownKeys = true; encodeDefaults = true }
+    private val areaIndex = WeatherAreaIndex(context)
+
+    /** Chinese province/city/county search, including centers for weather requests. */
+    fun searchAreas(query: String): List<WeatherPlace> = areaIndex.search(query)
 
     fun loadPlaces(): List<WeatherPlace> {
         val raw = prefs.getString(KEY_PLACES, null) ?: return emptyList()

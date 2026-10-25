@@ -1,7 +1,7 @@
 # 开源大学（OpeningSchool）
 功能说明
 
-> 当前测试版：`1.0.0-beta12`（versionCode 13） · [下载与更新](https://github.com/PanSomeone/OpeningSchool/releases)
+> 当前测试版：`1.0.0-beta13`（versionCode 14） · [下载与更新](https://github.com/PanSomeone/OpeningSchool/releases)
 
 ## 运行环境
 - **平台**：Android（minSdk 26）
@@ -14,14 +14,14 @@
 - 组件支持 1×1、2×1、1×2、2×2 四种尺寸，可添加、移除、长按右上角拖动、留空
 - 字体随组件尺寸缩放；拖动时卡片跟随手指并显示落点
 - 内置组件：天气、今日课程、日期、文件夹；插件提供热水和 GPA 快捷组件
-- 天气支持保存多个地区，可搜索 Open-Meteo 地理数据并切换；今日课程把上下课时间放在左侧
+- 天气支持保存多个地区；地区搜索内置省/市/区县中心坐标（可输入拼音，如 `hongan`），Open-Meteo 地理数据作为兜底；今日课程把上下课时间放在左侧
 - 文件夹组件可收纳多个功能并自定义名称
 
 ### 课表
 - 支持多张独立课表，可切换、新建、重命名、删除
 - 节次列同时显示上下课时间
 - 一门课可添加多个「星期 + 起止节次」时间段，支持设置周次、颜色、备注和跨节合并
-- 周次切换（‹ 第 N 周 ›），点击可跳转；点击周次条右侧的日期可直接设置开学第一天，设置后第一周第一天就是该日期
+- 周次切换（‹ 第 N 周 ›），点击可跳转；课表页左右滑动也可切换周次，双击周次回到本周；点击周次条右侧的日期可直接设置开学第一天，设置后第一周第一天就是该日期
 - 学期开始日期、总周数、一周起始日、周末显示均可调；日期范围会显示在周次条上并随周切换
 - 作息可调：节次数量、起止时间、午休分割线；修改某节时长可自动顺延后续节次
 - 课表页右上角菜单可直接进入课表设置，不必绕到插件页
@@ -64,11 +64,13 @@
 - 检查更新会显示是否有新版本；有更新时直接在应用内下载 APK，校验 SHA-256 后调起系统安装
 - 反馈直达 GitHub Issues；可导出包含版本、机型与最近日志的文本文件
 - 赞助页内置微信、支付宝收款二维码
+- 公告：主页右上角铃铛显示未读公告；设置 →「公告」可查看历史并一键全部已读
 - 开源许可建议与备份/回滚说明见 [docs/LICENSING.md](docs/LICENSING.md)、[docs/BACKUP.md](docs/BACKUP.md)
 
 ### 壁纸
 - 支持全局壁纸和按页面覆盖（主页、课表、热水、成绩、插件、设置）
 - 页面壁纸优先于全局壁纸
+- 选择图片后进入预览页，可拖动、双指或滑杆缩放调整裁切范围，确认后保存裁切结果
 
 ### 悬浮导航
 - 半透明外观，透明度可调
@@ -81,6 +83,7 @@
 - GPA 课程与计入开关：SharedPreferences（openschedule_scores）
 - 壁纸图片：`filesDir/wallpaper_*.img`
 - 运行日志：`filesDir/logs/app.log`
+- 公告缓存与已读记录：`filesDir/announcements.json`、SharedPreferences；公告源 [announcements.json](announcements.json)
 - 更新清单：[update.json](update.json)
 
 ## 更新与反馈
@@ -93,11 +96,10 @@
 
 ## 开源许可
 
-当前仓库尚未添加正式的 `LICENSE` 文件。建议采用以下边界，正式发布前需要项目作者确认：
-
-- 应用主体（`app`、`core`、`feature`、内置插件）：**AGPL-3.0**，防止衍生版本闭源分发。
-- 外部适配器协议与示例（`core/plugin-api`、`docs/ADAPTER_API.md`）：**Apache-2.0**，允许第三方适配器保留自己的实现。
+- 应用主体（`app`、`core`、`feature`、内置插件）：**AGPL-3.0**，全文见 [LICENSE](LICENSE)。
+- 外部适配器协议与示例（`core/plugin-api`、`adapter/sample-external`）：**Apache-2.0**，全文见 [core/plugin-api/LICENSE](core/plugin-api/LICENSE)。
 - 名称、Logo、应用图标、赞助二维码、截图：**保留所有权利**，不随代码许可授权。
 - release 签名密钥、插件签名/审核、未来的云端服务：不公开或单独授权。
+- 第三方依赖与数据署名（Open-Meteo、AreaCity 行政区划等）见 [NOTICE](NOTICE)。
 
-完整分析、第三方依赖和源码保护建议见 [docs/LICENSING.md](docs/LICENSING.md)。如果确实要保留一部分核心源码，应明确采用 source-available / open-core，而不是声称整体开源；建议把市场服务端、签名校验等放入独立私有模块。
+完整分析与源码保护建议见 [docs/LICENSING.md](docs/LICENSING.md)。

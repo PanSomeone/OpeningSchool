@@ -56,6 +56,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.openschedule.core.data.Announcement
 import com.openschedule.core.data.SettingsStore
 import com.openschedule.core.model.MAX_NAV_SLOTS
 import com.openschedule.core.model.NavSlot
@@ -71,6 +72,7 @@ import com.openschedule.feature.home.HomeWidgetSpec
 import com.openschedule.feature.plugins.BuiltInPluginUi
 import com.openschedule.feature.plugins.PluginsScreen
 import com.openschedule.feature.plugins.PluginsViewModel
+import com.openschedule.feature.settings.AnnouncementDialog
 import com.openschedule.feature.settings.SettingsScreen
 import com.openschedule.feature.settings.SettingsViewModel
 import com.openschedule.feature.timetable.TimetableScreen
@@ -89,6 +91,14 @@ import java.io.File
 @Composable
 fun AppShell(graph: AppGraph) {
     val settings by graph.settingsStore.settings.collectAsStateWithLifecycle()
+    val announcements by graph.announcementStore.announcements.collectAsStateWithLifecycle()
+    val announcementReadIds by graph.announcementStore.readIds.collectAsStateWithLifecycle()
+    val unreadAnnouncements = announcements.count { it.id !in announcementReadIds }
+    var announcementToShow by remember { mutableStateOf<Announcement?>(null) }
+
+    LaunchedEffect(Unit) {
+        graph.announcementStore.refresh()
+    }
 
     val homeViewModel = rememberedViewModel(HomeViewModel::class.java, "home") {
         HomeViewModel(graph.timetableStore, graph.weatherStore)
@@ -167,6 +177,12 @@ fun AppShell(graph: AppGraph) {
                     shortcuts = homeShortcuts,
                     timetableEnabled = "timetable" !in settings.disabledPlugins,
                     onOpen = openDestination,
+                    unreadAnnouncements = unreadAnnouncements,
+                    onOpenAnnouncements = {
+                        announcementToShow = announcements.firstOrNull {
+                            it.id !in announcementReadIds
+                        }
+                    },
                 )
             },
         ),
@@ -240,6 +256,7 @@ fun AppShell(graph: AppGraph) {
                 SettingsScreen(
                     viewModel = viewModel,
                     hiddenPluginIds = settings.disabledPlugins,
+                    announcementStore = graph.announcementStore,
                 )
             },
         ),
@@ -397,6 +414,16 @@ fun AppShell(graph: AppGraph) {
             )
             }
         }
+    }
+
+    announcementToShow?.let { announcement ->
+        AnnouncementDialog(
+            announcement = announcement,
+            onDismiss = {
+                graph.announcementStore.markRead(announcement.id)
+                announcementToShow = null
+            },
+        )
     }
 }
 

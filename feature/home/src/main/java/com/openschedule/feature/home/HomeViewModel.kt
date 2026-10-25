@@ -163,7 +163,9 @@ class HomeViewModel(
         _searching.value = true
         searchJob = viewModelScope.launch {
             try {
-                val results = withContext(Dispatchers.IO) { geocode(trimmed) }
+                val results = withContext(Dispatchers.IO) {
+                    weatherStore.searchAreas(trimmed).ifEmpty { geocode(trimmed) }
+                }
                 _searchResults.value = results
                 if (results.isEmpty()) _searchError.value = "没有找到该地区"
             } catch (error: CancellationException) {

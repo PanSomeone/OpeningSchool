@@ -103,6 +103,16 @@ git show backup/pre-iteration-2026-10-25:path/to/file
 - 同步包含 beta11 的华农成绩入口修复（智慧狮山个人中心）。
 - README 与应用内版本兜底文案更新为 beta12。
 
+## 2026-10-25 beta13
+
+- 版本：`1.0.0-beta13`（versionCode 14）
+- SHA-256：`f1a00c6bb5d7d2b688173c44364e637b1dde1f8a8ee8003809f8a520011d5fe1`
+- 课表页左右滑动切换周次（阈值约屏宽 10%，带轻震动），双击周次回到本周。
+- 壁纸选择后进入全屏预览：拖动、双指缩放、滑杆缩放（1–4 倍）、重置；确认后保存裁切结果并应用。
+- 新增公告：`announcements.json` 远程清单 + 内置兜底，主页铃铛未读角标，设置 →「公告」历史列表、详情与全部已读。
+- 天气地区搜索改为内置省/市/区县中心坐标（AreaCity 数据，含拼音），Open-Meteo 仅作兜底。
+- 仓库新增 `LICENSE`（AGPL-3.0）、`NOTICE`、`core/plugin-api/LICENSE` 与 `adapter/sample-external/LICENSE`（Apache-2.0）。
+
 ## 当前验证记录
 
 - 全部单元测试通过（新增华农课表/成绩解析、版本比较回归测试）。

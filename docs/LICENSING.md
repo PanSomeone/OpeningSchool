@@ -30,8 +30,8 @@
 
 ## 4. 当前仓库需要补齐的合规项
 
-- [ ] 选择并加入根目录 `LICENSE`（建议 AGPL-3.0）。
-- [ ] 加入 `NOTICE`：品牌、第三方依赖、天气数据署名。
+- [x] 选择并加入根目录 `LICENSE`（AGPL-3.0）。
+- [x] 加入 `NOTICE`：品牌、第三方依赖、天气数据与行政区划数据署名。
 - [ ] 确认 `798QuSiBa` 移植代码的版权与许可；原作者是项目作者时，仍需在 NOTICE 里说明来源。
 - [ ] 确认是否参考/复制了 shiguangschedule 的代码；若复制，按其许可证保留声明。
 - [ ] 插件市场目录中加入每一项的许可证、来源与 SHA-256。
@@ -43,6 +43,7 @@
 - AndroidX / Jetpack Compose / Kotlin / OkHttp：Apache-2.0。
 - Jsoup：MIT。
 - Open-Meteo 天气数据：CC BY 4.0，需要保留 “Weather data by Open-Meteo.com” 署名。
+- 中国省市区行政区划与中心坐标：AreaCity-JsSpider-StatsGov（MIT），仓库内 `feature/home/src/main/assets/weather_areas.json` 由其数据整理而来；来源与许可已写入 NOTICE。
 - 学校教务页面、课程与成绩数据：归学校/用户所有；应用只在用户主动点击导入时读取当前页面，不建立自己的教务数据副本。
 - 热水插件：移植自作者自己的 `798QuSiBa`；公开分发已获作者确认，但仍应在 NOTICE 标注来源和“仅操作本人有权使用的设备”。
 

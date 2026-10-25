@@ -23,12 +23,15 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Campaign
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DragIndicator
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.OpenInFull
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
@@ -138,6 +141,8 @@ fun HomeScreen(
     shortcuts: List<HomeShortcut>,
     timetableEnabled: Boolean,
     onOpen: (String) -> Unit,
+    unreadAnnouncements: Int = 0,
+    onOpenAnnouncements: () -> Unit = {},
 ) {
     val timetable by viewModel.timetable.collectAsStateWithLifecycle()
     val weather by viewModel.weather.collectAsStateWithLifecycle()
@@ -264,6 +269,17 @@ fun HomeScreen(
                 if (editMode) {
                     TextButton(onClick = { editMode = false }) { Text("完成") }
                 } else {
+                    if (unreadAnnouncements > 0) {
+                        IconButton(onClick = onOpenAnnouncements) {
+                            BadgedBox(
+                                badge = {
+                                    Badge { Text(unreadAnnouncements.coerceAtMost(9).toString()) }
+                                },
+                            ) {
+                                Icon(Icons.Filled.Campaign, contentDescription = "查看公告")
+                            }
+                        }
+                    }
                     IconButton(onClick = { editMode = true }) {
                         Icon(Icons.Filled.Edit, contentDescription = "编辑主页")
                     }

@@ -1,0 +1,39 @@
+开源大学 OpeningSchool
+Copyright (C) 2026 PanSomeone
+
+本仓库的许可边界：
+
+1. 应用主体（app、core、feature、内置插件）采用 GNU Affero General Public
+   License v3.0（AGPL-3.0），完整文本见根目录 LICENSE。
+   This program is free software: you can redistribute it and/or modify it
+   under the terms of the GNU Affero General Public License as published by
+   the Free Software Foundation, either version 3 of the License, or (at your
+   option) any later version. This program is distributed in the hope that it
+   will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty
+   of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+2. 外部适配器协议与示例代码（core/plugin-api、adapter/sample-external）采用
+   Apache License 2.0，完整文本见 core/plugin-api/LICENSE，允许第三方适配器
+   保留自己的实现。
+
+3. 名称“开源大学 / OpeningSchool”、Logo、应用图标、赞助二维码、截图与宣传
+   素材保留所有权利，不随代码许可授权；fork 必须使用不同的名称和图标。
+
+4. release 签名密钥、插件签名校验、未来的云端服务不公开，或另行授权。
+
+品牌与素材不属于 AGPL-3.0 的授权范围。除上述明确许可外，不授予任何商标权。
+
+第三方组件与数据：
+
+- AndroidX / Jetpack Compose / Kotlin / OkHttp / Retrofit：Apache-2.0
+- kotlinx.serialization / kotlinx.coroutines：Apache-2.0
+- Jsoup：MIT
+- Open-Meteo 天气数据：CC BY 4.0，数据来自 https://open-meteo.com/
+- 中国省市区行政区划与中心坐标：AreaCity-JsSpider-StatsGov（MIT），
+  https://github.com/xiangyuecn/AreaCity-JsSpider-StatsGov
+- 热水插件移植自项目作者的 798QuSiBa；公开分发已获作者确认。请仅操作本人
+  有权使用的设备，并遵守学校相关规定。
+- 教务系统页面、课程、成绩与个人信息归学校及用户所有；本应用不保存教务密码，
+  仅在用户主动点击导入时读取当前登录页面。
+
+第三方组件的完整许可文本以各自发布页为准。

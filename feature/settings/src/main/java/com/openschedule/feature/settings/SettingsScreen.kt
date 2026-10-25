@@ -27,6 +27,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BrightnessAuto
+import androidx.compose.material.icons.filled.Campaign
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Description
@@ -83,6 +84,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.openschedule.core.data.AnnouncementStore
 import com.openschedule.core.data.AppLog
 import com.openschedule.core.model.MAX_NAV_SLOTS
 import com.openschedule.core.model.NavSlot
@@ -103,9 +105,13 @@ import kotlin.math.roundToInt
 fun SettingsScreen(
     viewModel: SettingsViewModel,
     hiddenPluginIds: Set<String> = emptySet(),
+    announcementStore: AnnouncementStore,
 ) {
     val settings by viewModel.settings.collectAsStateWithLifecycle()
     val message by viewModel.message.collectAsStateWithLifecycle()
+    val announcements by announcementStore.announcements.collectAsStateWithLifecycle()
+    val announcementReadIds by announcementStore.readIds.collectAsStateWithLifecycle()
+    val announcementUnread = announcements.count { it.id !in announcementReadIds }
     val snackbar = remember { SnackbarHostState() }
     val context = LocalContext.current
     val versionName = remember(context) { appVersionName(context) }
@@ -117,6 +123,7 @@ fun SettingsScreen(
     var iconPickerFor by remember { mutableStateOf<NavSlot?>(null) }
     var renaming by remember { mutableStateOf<NavSlot?>(null) }
     var showWallpaper by remember { mutableStateOf(false) }
+    var showAnnouncements by remember { mutableStateOf(false) }
     var exportingLog by remember { mutableStateOf(false) }
     var showSponsor by remember { mutableStateOf(false) }
     var showUpdate by remember { mutableStateOf(false) }
@@ -146,6 +153,14 @@ fun SettingsScreen(
             viewModel = viewModel,
             hiddenPluginIds = hiddenPluginIds,
             onBack = { showWallpaper = false },
+        )
+        return
+    }
+
+    if (showAnnouncements) {
+        AnnouncementHistoryScreen(
+            store = announcementStore,
+            onBack = { showAnnouncements = false },
         )
         return
     }
@@ -338,6 +353,20 @@ fun SettingsScreen(
                     )
                 }
                 }
+
+            SectionTitle("公告")
+            SettingsCard {
+                AboutRow(
+                    icon = Icons.Filled.Campaign,
+                    title = "历史公告",
+                    value = when {
+                        announcementUnread > 0 -> "$announcementUnread 条未读"
+                        announcements.isNotEmpty() -> "全部已读"
+                        else -> "暂无"
+                    },
+                    onClick = { showAnnouncements = true },
+                )
+            }
 
             SectionTitle("反馈与日志")
             SettingsCard {
@@ -818,7 +847,7 @@ private fun appVersionName(context: Context): String = runCatching {
         context.packageManager.getPackageInfo(context.packageName, 0)
     }
     info.versionName
-}.getOrNull().orEmpty().ifBlank { "1.0.0-beta12" }
+}.getOrNull().orEmpty().ifBlank { "1.0.0-beta13" }
 
 private const val AUTHOR = "PanSomeone"
 

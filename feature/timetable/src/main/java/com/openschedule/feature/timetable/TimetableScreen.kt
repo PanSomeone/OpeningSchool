@@ -3,6 +3,7 @@ package com.openschedule.feature.timetable
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -48,6 +49,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -81,6 +85,7 @@ fun TimetableScreen(
     val error by viewModel.error.collectAsStateWithLifecycle()
 
     val snackbar = remember { SnackbarHostState() }
+    val haptics = LocalHapticFeedback.current
     var showSwitcher by remember { mutableStateOf(false) }
     var showImport by remember { mutableStateOf(false) }
     var webTarget by remember { mutableStateOf<WebTarget?>(null) }
@@ -131,7 +136,38 @@ fun TimetableScreen(
                 onStartDateChange = viewModel::saveSemesterStart,
             )
 
-            Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .pointerInput(week, timetable.totalWeeks) {
+                        val threshold = maxOf(56.dp.toPx(), size.width * 0.1f)
+                        var dragged = 0f
+                        detectHorizontalDragGestures(
+                            onDragStart = { dragged = 0f },
+                            onDragCancel = { dragged = 0f },
+                            onHorizontalDrag = { change, dragAmount ->
+                                dragged += dragAmount
+                                change.consume()
+                            },
+                            onDragEnd = {
+                                val direction = when {
+                                    dragged <= -threshold -> 1
+                                    dragged >= threshold -> -1
+                                    else -> 0
+                                }
+                                val target = (week + direction)
+                                    .coerceIn(1, timetable.totalWeeks)
+                                if (direction != 0 && target != week) {
+                                    haptics.performHapticFeedback(
+                                        HapticFeedbackType.TextHandleMove,
+                                    )
+                                    viewModel.setWeek(target)
+                                }
+                            },
+                        )
+                    },
+            ) {
                 TimetableGrid(
                     timetable = timetable,
                     settings = settings,
@@ -515,7 +551,7 @@ private fun WeekStrip(
                         }
                     }
                     Text(
-                        text = "双击「第 N 周」回到本周",
+                        text = "左右滑动切换周次 · 双击周次回到本周",
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(top = 10.dp),
