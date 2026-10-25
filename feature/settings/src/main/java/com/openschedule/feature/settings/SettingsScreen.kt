@@ -802,7 +802,7 @@ private fun appVersionName(context: Context): String = runCatching {
         context.packageManager.getPackageInfo(context.packageName, 0)
     }
     info.versionName
-}.getOrNull().orEmpty().ifBlank { "1.0.0-beta10" }
+}.getOrNull().orEmpty().ifBlank { "1.0.0-beta11" }
 
 private const val AUTHOR = "PanSomeone"
 

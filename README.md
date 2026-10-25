@@ -1,7 +1,7 @@
 # 开源大学（OpeningSchool）
 功能说明
 
-> 当前测试版：`1.0.0-beta10`（versionCode 9） · [下载与更新](https://github.com/PanSomeone/OpeningSchool/releases)
+> 当前测试版：`1.0.0-beta11`（versionCode 9） · [下载与更新](https://github.com/PanSomeone/OpeningSchool/releases)
 
 ## 运行环境
 - **平台**：Android（minSdk 26）
@@ -36,6 +36,7 @@
 - 解析支持：正方 kbList JSON、#kbtable HTML、华农 `#kbgrid_table` 课程卡片、通用表格（横排/纵排、rowspan、单双周）
 - 华农课表按「日-节」单元格读取教师、地点、周次，跳过待筛选课程；同一门课的不同星期可保留各自的周次
 - 成绩导入支持华农 jqGrid（`aria-describedby` 列）与普通成绩表，自动组合学年/学期并跳过等级制成绩
+- 华农成绩入口：`https://jyjx.hzau.edu.cn/personal-center`（智慧狮山统一认证）；登录后进入成绩查询页，再点应用内「导入」
 - 导入前可预览，支持替换当前课表或新建
 - 不接管账号密码，不保存网页登录信息；抓取仅在用户点击「导入」时发生
 

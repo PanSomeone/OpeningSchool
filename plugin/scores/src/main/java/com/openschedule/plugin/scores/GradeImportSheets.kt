@@ -40,8 +40,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
-const val HZAU_GRADE_URL =
-    "http://jwgl.hzau.edu.cn/cjcx/cjcx_cxDgXscj.html?gnmkdm=N305005&layout=default"
+const val HZAU_GRADE_URL = "https://jyjx.hzau.edu.cn/personal-center"
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -85,7 +84,7 @@ fun GradeImportSheet(
             GradeSourceRow(
                 icon = Icons.Filled.School,
                 title = "华中农业大学",
-                subtitle = "正方 · 统一认证",
+                subtitle = "智慧狮山 · 统一认证",
             ) { onOpenWeb(HZAU_GRADE_URL) }
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
             GradeSourceRow(
@@ -95,7 +94,7 @@ fun GradeImportSheet(
             ) { customUrlOpen = true }
 
             Text(
-                text = "统一认证登录可能需要短信验证；登录并打开成绩查询页后再点「导入」",
+                text = "登录智慧狮山，进入「成绩查询」页面后再点「导入」；认证可能需要短信验证码",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(top = 12.dp),

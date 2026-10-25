@@ -1,9 +1,9 @@
 {
-  "version": "1.0.0-beta10",
-  "title": "开源大学 1.0.0-beta10",
-  "notes": "设置导航固定保留，不再允许隐藏；旧的隐藏状态会在启动时自动恢复。\n\n插件页右上角仍保留设置入口。热水关闭回退、课表菜单/预览/教师教室显示等保持可用。",
-  "pageUrl": "https://github.com/PanSomeone/OpeningSchool/releases/tag/v1.0.0-beta10",
-  "apkUrl": "https://github.com/PanSomeone/OpeningSchool/releases/download/v1.0.0-beta10/OpeningSchool-1.0.0-beta10.apk",
-  "sha256": "bd89c32a06bdfd84d286b8aa19d8f24d9da0f8fc4fbbc08b6cbadbf23cdd790b",
+  "version": "1.0.0-beta11",
+  "title": "开源大学 1.0.0-beta11",
+  "notes": "华农成绩导入入口改为新的智慧狮山个人中心：\n- 直接打开 https://jyjx.hzau.edu.cn/personal-center\n- 登录后进入成绩查询页，再点应用内的「导入」自动抓取\n\n保留原有成绩表解析与 GPA 预览。",
+  "pageUrl": "https://github.com/PanSomeone/OpeningSchool/releases/tag/v1.0.0-beta11",
+  "apkUrl": "https://github.com/PanSomeone/OpeningSchool/releases/download/v1.0.0-beta11/OpeningSchool-1.0.0-beta11.apk",
+  "sha256": "8c98e0ce7dc6cd14583d828a51fcb82884d2d4773157a958c2ef4c28f389ef93",
   "sizeBytes": 2645380
 }
