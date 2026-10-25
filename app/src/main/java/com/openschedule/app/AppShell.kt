@@ -259,7 +259,10 @@ fun AppShell(graph: AppGraph) {
                     iconKey = destination.iconKey,
                 )
             }.sortedBy { it.order }
-                .mapIndexed { index, slot -> slot.copy(order = index) }
+                .mapIndexed { index, slot ->
+                    val normalized = slot.copy(order = index)
+                    if (normalized.id == "settings") normalized.copy(visible = true) else normalized
+                }
 
             if (merged == current.nav) current else current.copy(nav = merged)
         }
@@ -272,11 +275,10 @@ fun AppShell(graph: AppGraph) {
         .sortedBy { it.order }
         .filter { slot -> slot.visible && enabledDestinations.any { it.id == slot.id } }
         .take(MAX_NAV_SLOTS)
-    val navSlots = if (visibleSlots.any { it.id == "settings" || it.id == "plugins" }) {
+    val navSlots = if (visibleSlots.any { it.id == "settings" }) {
         visibleSlots
     } else {
-        // Settings may be hidden, but the app must never lose its way back.
-        // Prefer the gear on the Plugins page; if both are hidden, surface Settings.
+        // Settings is the app's way back to every toggle; never let it disappear.
         val settingsSlot = settings.nav.firstOrNull { it.id == "settings" }
             ?.copy(visible = true)
             ?: NavSlot(id = "settings", label = "设置", iconKey = "settings")

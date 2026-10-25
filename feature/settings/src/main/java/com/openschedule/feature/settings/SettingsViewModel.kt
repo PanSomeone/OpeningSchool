@@ -34,6 +34,10 @@ class SettingsViewModel(
     }
 
     fun setNavVisible(id: String, visible: Boolean) {
+        if (id == "settings" && !visible) {
+            _message.value = "设置必须保留在导航栏"
+            return
+        }
         val current = settingsStore.settings.value
         if (visible && current.nav.count { it.visible } >= MAX_NAV_SLOTS) {
             _message.value = "底部导航最多 $MAX_NAV_SLOTS 个"

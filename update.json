@@ -1,9 +1,9 @@
 {
-  "version": "1.0.0-beta9",
-  "title": "开源大学 1.0.0-beta9",
-  "notes": "修复热水模块无法关闭的问题：启动时若服务端返回设备已在运行，按钮会切换为关闭而不是卡在启动态。\n\n同时修复隐藏设置导航后无法进入设置的问题：插件页右上角保留设置入口，插件页也隐藏时自动保留设置导航。",
-  "pageUrl": "https://github.com/PanSomeone/OpeningSchool/releases/tag/v1.0.0-beta9",
-  "apkUrl": "https://github.com/PanSomeone/OpeningSchool/releases/download/v1.0.0-beta9/OpeningSchool-1.0.0-beta9.apk",
-  "sha256": "2154f825833625f77829a6c693d966c4fdfbf4d458287797295ea1a3a4a0e108",
-  "sizeBytes": 2645376
+  "version": "1.0.0-beta10",
+  "title": "开源大学 1.0.0-beta10",
+  "notes": "设置导航固定保留，不再允许隐藏；旧的隐藏状态会在启动时自动恢复。\n\n插件页右上角仍保留设置入口。热水关闭回退、课表菜单/预览/教师教室显示等保持可用。",
+  "pageUrl": "https://github.com/PanSomeone/OpeningSchool/releases/tag/v1.0.0-beta10",
+  "apkUrl": "https://github.com/PanSomeone/OpeningSchool/releases/download/v1.0.0-beta10/OpeningSchool-1.0.0-beta10.apk",
+  "sha256": "bd89c32a06bdfd84d286b8aa19d8f24d9da0f8fc4fbbc08b6cbadbf23cdd790b",
+  "sizeBytes": 2645380
 }

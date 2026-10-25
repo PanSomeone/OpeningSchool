@@ -294,12 +294,21 @@ fun SettingsScreen(
                                 modifier = Modifier.size(18.dp),
                             )
                         }
-                        Switch(
-                            checked = slot.visible,
-                            onCheckedChange = { viewModel.setNavVisible(slot.id, it) },
-                            enabled = slot.visible || visibleCount < MAX_NAV_SLOTS,
-                            modifier = Modifier.padding(start = 4.dp),
-                        )
+                        if (slot.id == "settings") {
+                            Text(
+                                text = "固定",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(start = 8.dp, end = 4.dp),
+                            )
+                        } else {
+                            Switch(
+                                checked = slot.visible,
+                                onCheckedChange = { viewModel.setNavVisible(slot.id, it) },
+                                enabled = slot.visible || visibleCount < MAX_NAV_SLOTS,
+                                modifier = Modifier.padding(start = 4.dp),
+                            )
+                        }
                     }
                 }
                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
@@ -793,7 +802,7 @@ private fun appVersionName(context: Context): String = runCatching {
         context.packageManager.getPackageInfo(context.packageName, 0)
     }
     info.versionName
-}.getOrNull().orEmpty().ifBlank { "1.0.0-beta9" }
+}.getOrNull().orEmpty().ifBlank { "1.0.0-beta10" }
 
 private const val AUTHOR = "PanSomeone"
 
