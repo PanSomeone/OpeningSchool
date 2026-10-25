@@ -137,11 +137,15 @@ class UpdateViewModel(
     }
 
     private fun fetchManifest(): UpdateInfo {
-        val connection = URL(MANIFEST_URL).openConnection() as HttpURLConnection
+        val url = "$MANIFEST_URL?t=${System.currentTimeMillis()}"
+        val connection = URL(url).openConnection() as HttpURLConnection
         connection.connectTimeout = 6_000
         connection.readTimeout = 8_000
         connection.requestMethod = "GET"
+        connection.useCaches = false
         connection.setRequestProperty("User-Agent", "OpeningSchool-Update")
+        connection.setRequestProperty("Cache-Control", "no-cache")
+        connection.setRequestProperty("Pragma", "no-cache")
         try {
             if (connection.responseCode !in 200..299) {
                 throw IOException("更新服务 HTTP ${connection.responseCode}")
@@ -233,7 +237,7 @@ class UpdateViewModel(
 
     private fun appVersionName(context: Context): String = runCatching {
         context.packageManager.getPackageInfo(context.packageName, 0).versionName
-    }.getOrNull().orEmpty().ifBlank { "1.0.0-beta3" }
+    }.getOrNull().orEmpty().ifBlank { "1.0.0-beta4" }
 
     private companion object {
         const val MANIFEST_URL =

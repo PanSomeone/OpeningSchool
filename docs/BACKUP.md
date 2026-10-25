@@ -38,12 +38,13 @@ git show backup/pre-iteration-2026-10-25:path/to/file
 - Release 包启用 R8 默认混淆与资源压缩；签名密钥不公开。
 - 适配器包：`adapter-v1` 预发布（`https://github.com/PanSomeone/OpeningSchool/releases/tag/adapter-v1`），包含正方与示例两个外部适配器；目录见 `market/catalog.json`。
 
-## 2026-10-25 beta3
+## 2026-10-25 beta4
 
-- 版本：`1.0.0-beta3`（versionCode 4）
+- 版本：`1.0.0-beta4`（versionCode 5）
 - 本地产物：`app/build/outputs/apk/release/app-release.apk`
-- SHA-256：`e47ffcaf1a8796faa3bd65ece69c1c55e0cfefb4ed51ca4d28bd57dd358dcd22`
-- 新增应用内更新：`update.json` → 显示是否最新 → 应用内下载 → SHA-256 校验 → 系统安装。
+- SHA-256：`330d21400952dfc6cf2dfa02bd7411ab34f81a325f99fc57a1f7a6d44f344d08`
+- 应用内更新：`update.json` → 显示是否最新 → 应用内下载 → SHA-256 校验 → 系统安装。
+- 更新清单增加时间戳并禁用 HTTP 缓存，避免 raw GitHub 的 CDN 缓存导致版本延迟。
 - 更新清单地址：`https://raw.githubusercontent.com/PanSomeone/OpeningSchool/main/update.json`；以后换 Gitee 只改 `UpdateViewModel.MANIFEST_URL`。
 
 ## 当前验证记录
