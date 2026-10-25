@@ -118,6 +118,9 @@ git show backup/pre-iteration-2026-10-25:path/to/file
 
 - 版本：`1.0.0-beta14`（versionCode 15）
 - SHA-256：`826c3b3e2d371d1ffda48bd235d8ae59464ca114bc042f72c5adde2ffe96f74a`
+- GitHub：`https://github.com/PanSomeone/OpeningSchool/releases/tag/v1.0.0-beta14`
+- Gitee（默认更新源，仅安装包与清单）：`https://gitee.com/PanSomeone/OpeningSchool/releases/tag/v1.0.0-beta14`
+- Gitee `main` 仅含 README、`update.json`、`announcements.json`；`apkUrl` 指向 Gitee 附件，`fallbackApkUrl` 指向 GitHub。
 - 应用内更新默认源切换为 Gitee：优先读取 Gitee 的 `update.json` 与发行版 APK，失败时回退 GitHub。
 - 公告源同样改为 Gitee 优先、GitHub 备用。
 - Gitee 仓库按 798QuSiBa 的方式只保留下载页与更新清单，不保留源代码；源码与 Issues 仍以 GitHub 为准。
@@ -125,7 +128,8 @@ git show backup/pre-iteration-2026-10-25:path/to/file
 ## 当前验证记录
 
 - 全部单元测试通过（新增华农课表/成绩解析、版本比较回归测试）。
-- Release APK 在 API 37 模拟器冷启动约 0.9–1.1 秒，体积约 2.5 MB。
-- `update.json` 是应用内更新的清单（版本号、APK URL、SHA-256、大小）；发布新版本时同步更新。
+- Release APK 在 API 37 模拟器冷启动约 0.9–1.1 秒，beta14 体积约 2.7 MB。
+- beta14 已验证：GitHub 与 Gitee 下载的 APK SHA-256 一致；Gitee raw 清单可读取；应用内检查更新显示「已是最新版本」；全屏壁纸裁切与课表页自定义壁纸生效。
+- `update.json` 是应用内更新的清单（版本号、APK URL、fallbackApkUrl、SHA-256、大小）；发布新版本时同步更新 Gitee 与 GitHub 两份。
 - 已验证：多地区天气搜索与持久化、赞助二维码、反馈跳转、日志导出、主页长按拖动换位、今日课程时间左对齐、插件市场搜索/分类/并行批量下载/SHA 校验、外部适配器发现与导入。
 - 插件市场安装仍由系统确认；未知来源权限需要用户手动允许。
