@@ -676,6 +676,7 @@ private fun UpdateSheet(
                     Button(onClick = onDownload, modifier = Modifier.fillMaxWidth()) {
                         Text("下载更新")
                     }
+                    TextButton(onClick = onCheck) { Text("重新检查") }
                     TextButton(onClick = onOpenRelease) { Text("在浏览器查看") }
                 }
 
@@ -711,6 +712,7 @@ private fun UpdateSheet(
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
+                    TextButton(onClick = onCheck) { Text("重新检查") }
                 }
 
                 is UpdateState.Failed -> {
@@ -791,7 +793,7 @@ private fun appVersionName(context: Context): String = runCatching {
         context.packageManager.getPackageInfo(context.packageName, 0)
     }
     info.versionName
-}.getOrNull().orEmpty().ifBlank { "1.0.0-beta4" }
+}.getOrNull().orEmpty().ifBlank { "1.0.0-beta5" }
 
 private const val AUTHOR = "PanSomeone"
 

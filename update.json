@@ -1,9 +1,9 @@
 {
-  "version": "1.0.0-beta4",
-  "title": "开源大学 1.0.0-beta4",
-  "notes": "修复更新清单可能被 CDN 缓存的问题，检查更新现在始终读取最新版本。\n\n包含 beta3 的应用内检查更新/下载/校验/安装能力，以及华农课表与成绩导入修复、插件市场、天气多地区、赞助二维码和主页优化。",
-  "pageUrl": "https://github.com/PanSomeone/OpeningSchool/releases/tag/v1.0.0-beta4",
-  "apkUrl": "https://github.com/PanSomeone/OpeningSchool/releases/download/v1.0.0-beta4/OpeningSchool-1.0.0-beta4.apk",
-  "sha256": "330d21400952dfc6cf2dfa02bd7411ab34f81a325f99fc57a1f7a6d44f344d08",
+  "version": "1.0.0-beta5",
+  "title": "开源大学 1.0.0-beta5",
+  "notes": "修复更新对话框在下载完成后缺少“重新检查”的问题。\n\n保留应用内检查、下载、SHA-256 校验与系统安装流程。",
+  "pageUrl": "https://github.com/PanSomeone/OpeningSchool/releases/tag/v1.0.0-beta5",
+  "apkUrl": "https://github.com/PanSomeone/OpeningSchool/releases/download/v1.0.0-beta5/OpeningSchool-1.0.0-beta5.apk",
+  "sha256": "b8a53b4bb6e722b16fe8bb412cede8b3acb7cadb97281c69f907f5e92e919b94",
   "sizeBytes": 2612608
 }
