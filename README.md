@@ -1,7 +1,7 @@
 # 开源大学（OpeningSchool）
 功能说明
 
-> 当前测试版：`1.0.0-beta11`（versionCode 9） · [下载与更新](https://github.com/PanSomeone/OpeningSchool/releases)
+> 当前测试版：`1.0.0-beta12`（versionCode 13） · [下载与更新](https://github.com/PanSomeone/OpeningSchool/releases)
 
 ## 运行环境
 - **平台**：Android（minSdk 26）
@@ -87,6 +87,7 @@
 - 应用内更新：设置 →「检查更新」→ 显示是否有新版本 → 应用内下载 → SHA-256 校验 → 系统安装
 - 更新清单：<https://raw.githubusercontent.com/PanSomeone/OpeningSchool/main/update.json>
 - 问题反馈：<https://github.com/PanSomeone/OpeningSchool/issues>
+- 反馈群：`1126108304`（设置 → 反馈与日志可一键复制）
 - 适配器目录：[market/catalog.json](market/catalog.json)；说明见 [docs/PLUGIN_MARKET.md](docs/PLUGIN_MARKET.md)
 - 版本与回滚记录：[docs/BACKUP.md](docs/BACKUP.md)
 

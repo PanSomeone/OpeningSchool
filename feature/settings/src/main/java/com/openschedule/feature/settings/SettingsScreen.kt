@@ -1,5 +1,7 @@
 package com.openschedule.feature.settings
 
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -30,6 +32,7 @@ import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Feedback
+import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Favorite
@@ -349,6 +352,19 @@ fun SettingsScreen(
                         if (!opened) {
                             scope.launch { snackbar.showSnackbar("没有可用的浏览器") }
                         }
+                    },
+                )
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                AboutRow(
+                    icon = Icons.Filled.Groups,
+                    title = "反馈群",
+                    value = FEEDBACK_GROUP,
+                    onClick = {
+                        val clipboard = context.getSystemService(ClipboardManager::class.java)
+                        clipboard?.setPrimaryClip(
+                            ClipData.newPlainText("反馈群", FEEDBACK_GROUP),
+                        )
+                        scope.launch { snackbar.showSnackbar("群号已复制") }
                     },
                 )
                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
@@ -802,11 +818,13 @@ private fun appVersionName(context: Context): String = runCatching {
         context.packageManager.getPackageInfo(context.packageName, 0)
     }
     info.versionName
-}.getOrNull().orEmpty().ifBlank { "1.0.0-beta11" }
+}.getOrNull().orEmpty().ifBlank { "1.0.0-beta12" }
 
 private const val AUTHOR = "PanSomeone"
 
 private const val FEEDBACK_URL = "https://github.com/PanSomeone/OpeningSchool/issues"
+
+private const val FEEDBACK_GROUP = "1126108304"
 
 
 @Composable

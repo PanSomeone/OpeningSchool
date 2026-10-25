@@ -1,9 +1,9 @@
 {
-  "version": "1.0.0-beta11",
-  "title": "开源大学 1.0.0-beta11",
-  "notes": "华农成绩导入入口改为新的智慧狮山个人中心：\n- 直接打开 https://jyjx.hzau.edu.cn/personal-center\n- 登录后进入成绩查询页，再点应用内的「导入」自动抓取\n\n保留原有成绩表解析与 GPA 预览。",
-  "pageUrl": "https://github.com/PanSomeone/OpeningSchool/releases/tag/v1.0.0-beta11",
-  "apkUrl": "https://github.com/PanSomeone/OpeningSchool/releases/download/v1.0.0-beta11/OpeningSchool-1.0.0-beta11.apk",
-  "sha256": "8c98e0ce7dc6cd14583d828a51fcb82884d2d4773157a958c2ef4c28f389ef93",
+  "version": "1.0.0-beta12",
+  "title": "开源大学 1.0.0-beta12",
+  "notes": "新增反馈群号：\n- 设置 →「反馈与日志」新增「反馈群」1126108304，点按即可复制群号\n\n同时包含华农成绩导入修复：\n- 入口改为 https://jyjx.hzau.edu.cn/personal-center（智慧狮山统一认证）\n- 登录后进入成绩查询页，再点应用内的「导入」自动抓取\n\n保留原有成绩表解析与 GPA 预览。",
+  "pageUrl": "https://github.com/PanSomeone/OpeningSchool/releases/tag/v1.0.0-beta12",
+  "apkUrl": "https://github.com/PanSomeone/OpeningSchool/releases/download/v1.0.0-beta12/OpeningSchool-1.0.0-beta12.apk",
+  "sha256": "4be4b748f6ee26d72fa10fb757bb2ac565d2e37063428cf77a6e63b098be8d34",
   "sizeBytes": 2645380
 }
