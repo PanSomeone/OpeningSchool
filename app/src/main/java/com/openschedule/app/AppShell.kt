@@ -360,7 +360,7 @@ fun AppShell(graph: AppGraph) {
                         .background(
                             androidx.compose.ui.graphics.Brush.verticalGradient(
                                 colors = listOf(
-                                    MaterialTheme.colorScheme.background.copy(alpha = 0.92f),
+                                    MaterialTheme.colorScheme.background.copy(alpha = 0.78f),
                                     Color.Transparent,
                                 ),
                             ),
@@ -524,9 +524,9 @@ private fun WallpaperBackground(fileName: String) {
                 .fillMaxSize()
                 .background(
                     if (dark) {
-                        Color.Black.copy(alpha = 0.45f)
+                        Color.Black.copy(alpha = 0.34f)
                     } else {
-                        Color.White.copy(alpha = 0.55f)
+                        Color.White.copy(alpha = 0.18f)
                     },
                 ),
         )

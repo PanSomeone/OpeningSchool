@@ -1,10 +1,10 @@
 {
-  "version": "1.0.0-beta15",
-  "title": "开源大学 1.0.0-beta15",
-  "notes": "本次更新：\n- 修复主页公告角标过大、遮挡图标的问题，改为右上角小圆点\n- 保留 Gitee 优先更新、GitHub 备用下载\n- 其他功能与 beta14 相同",
-  "pageUrl": "https://gitee.com/PanSomeone/OpeningSchool/releases/tag/v1.0.0-beta15",
-  "apkUrl": "https://gitee.com/PanSomeone/OpeningSchool/releases/download/v1.0.0-beta15/OpeningSchool-1.0.0-beta15.apk",
-  "fallbackApkUrl": "https://github.com/PanSomeone/OpeningSchool/releases/download/v1.0.0-beta15/OpeningSchool-1.0.0-beta15.apk",
-  "sha256": "6364263b7b1c2638c71f8bd8a0e6b5ee1ccb23227c3e8085084413f408acb7d6",
+  "version": "1.0.0-beta16",
+  "title": "开源大学 1.0.0-beta16",
+  "notes": "本次更新：\n- 减弱浅色主题的壁纸蒙层，壁纸不再发白\n- 热水小组件适配小尺寸：状态改为单行，电源按钮移到底部，避开右上角拖动点\n- 保留公告小圆点、Gitee 优先更新与 GitHub 备用下载",
+  "pageUrl": "https://gitee.com/PanSomeone/OpeningSchool/releases/tag/v1.0.0-beta16",
+  "apkUrl": "https://gitee.com/PanSomeone/OpeningSchool/releases/download/v1.0.0-beta16/OpeningSchool-1.0.0-beta16.apk",
+  "fallbackApkUrl": "https://github.com/PanSomeone/OpeningSchool/releases/download/v1.0.0-beta16/OpeningSchool-1.0.0-beta16.apk",
+  "sha256": "87eb5ffd3560489f48f75d45a2246674ecc6d5c23fd3727a3c987707a74c0aab",
   "sizeBytes": 2746372
 }
