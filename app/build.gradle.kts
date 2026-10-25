@@ -21,8 +21,8 @@ android {
         applicationId = "com.openschedule"
         minSdk = 26
         targetSdk = 37
-        versionCode = 7
-        versionName = "1.0.0-beta6"
+        versionCode = 8
+        versionName = "1.0.0-beta7"
     }
 
     signingConfigs {

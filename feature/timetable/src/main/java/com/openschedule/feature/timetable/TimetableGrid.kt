@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -312,23 +313,36 @@ private fun DayColumn(
                         }
                     },
             ) {
-                Column(modifier = Modifier.padding(horizontal = 4.dp, vertical = 3.dp)) {
+                Column(modifier = Modifier.padding(horizontal = 3.dp, vertical = 2.dp)) {
                     Text(
                         text = course.name,
                         fontSize = (11f * textScale).sp,
-                        lineHeight = (13f * textScale).sp,
+                        lineHeight = (12.5f * textScale).sp,
                         fontWeight = FontWeight.Medium,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
                     )
-                    if (course.location.isNotBlank()) {
+                    val detailColor = LocalContentColor.current.copy(alpha = 0.8f)
+                    if (course.teacher.isNotBlank()) {
                         Text(
-                            text = course.location,
-                            fontSize = (9f * textScale).sp,
-                            lineHeight = (11f * textScale).sp,
+                            text = course.teacher,
+                            fontSize = (8.5f * textScale).sp,
+                            lineHeight = (9.5f * textScale).sp,
+                            color = detailColor,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
                             modifier = Modifier.padding(top = 2.dp),
+                        )
+                    }
+                    val location = displayLocation(course.location)
+                    if (location.isNotBlank()) {
+                        Text(
+                            text = location,
+                            fontSize = (8.5f * textScale).sp,
+                            lineHeight = (9.5f * textScale).sp,
+                            color = detailColor,
+                            maxLines = if (slot.periodSpan >= 2) 2 else 1,
+                            overflow = TextOverflow.Ellipsis,
                         )
                     }
                 }
@@ -336,6 +350,9 @@ private fun DayColumn(
         }
     }
 }
+
+private fun displayLocation(raw: String): String =
+    raw.trim().replaceFirst(Regex("^本部[\\s·-]+"), "")
 
 @Composable
 private fun BackgroundLayer(settings: AppSettings) {

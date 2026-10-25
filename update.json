@@ -1,9 +1,9 @@
 {
-  "version": "1.0.0-beta6",
-  "title": "开源大学 1.0.0-beta6",
-  "notes": "新增学期开学日期快捷设置与每日日期显示；课程字号可调；课程颜色扩展到 20 种并支持自定义色相/十六进制。\n\n应用内检查更新、下载、SHA-256 校验与系统安装继续可用。",
-  "pageUrl": "https://github.com/PanSomeone/OpeningSchool/releases/tag/v1.0.0-beta6",
-  "apkUrl": "https://github.com/PanSomeone/OpeningSchool/releases/download/v1.0.0-beta6/OpeningSchool-1.0.0-beta6.apk",
-  "sha256": "5b5c4e2d842e4417175e77bc7366abc51d81e52be926ab5142186391eacb1d69",
+  "version": "1.0.0-beta7",
+  "title": "开源大学 1.0.0-beta7",
+  "notes": "课程卡片现在直接显示教师和教室，并去掉重复的“本部”前缀；课程名两行、字号可调、20 色与自定义颜色继续可用。\n\n周次条日期、应用内更新、插件市场等功能保持不变。",
+  "pageUrl": "https://github.com/PanSomeone/OpeningSchool/releases/tag/v1.0.0-beta7",
+  "apkUrl": "https://github.com/PanSomeone/OpeningSchool/releases/download/v1.0.0-beta7/OpeningSchool-1.0.0-beta7.apk",
+  "sha256": "9f77970445340a09273540dfcfaf042b5a63edf26bcaf5257a7b5cf429738b62",
   "sizeBytes": 2628992
 }
