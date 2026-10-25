@@ -75,6 +75,7 @@ import com.openschedule.feature.plugins.PluginsViewModel
 import com.openschedule.feature.settings.AnnouncementDialog
 import com.openschedule.feature.settings.SettingsScreen
 import com.openschedule.feature.settings.SettingsViewModel
+import com.openschedule.feature.settings.WallpaperSettingsScreen
 import com.openschedule.feature.timetable.TimetableScreen
 import com.openschedule.feature.timetable.TimetableSettingsScreen
 import com.openschedule.feature.timetable.TimetableViewModel
@@ -105,10 +106,12 @@ fun AppShell(graph: AppGraph) {
     }
     var selectedId by rememberSaveable { mutableStateOf("home") }
     var pluginSettingsId by rememberSaveable { mutableStateOf<String?>(null) }
+    var wallpaperOpen by rememberSaveable { mutableStateOf(false) }
 
     val openDestination: (String) -> Unit = { id ->
         selectedId = id
         pluginSettingsId = null
+        wallpaperOpen = false
     }
 
     val homeShortcuts = listOf(
@@ -325,6 +328,9 @@ fun AppShell(graph: AppGraph) {
     ) {
         selectedId = "home"
     }
+    BackHandler(enabled = wallpaperOpen) {
+        wallpaperOpen = false
+    }
 
     val context = LocalContext.current
     val wallpaperFile = remember(active.id, settings.appWallpaper, settings.pageWallpapers, context) {
@@ -372,8 +378,20 @@ fun AppShell(graph: AppGraph) {
                         .fillMaxSize()
                         .padding(innerPadding),
                 ) {
-                    when (pluginSettingsId) {
-                        "timetable" -> {
+                    when {
+                        wallpaperOpen -> {
+                            val viewModel = rememberedViewModel(
+                                SettingsViewModel::class.java,
+                                "settings",
+                            ) { SettingsViewModel(graph.settingsStore) }
+                            WallpaperSettingsScreen(
+                                viewModel = viewModel,
+                                hiddenPluginIds = settings.disabledPlugins,
+                                onBack = { wallpaperOpen = false },
+                            )
+                        }
+
+                        pluginSettingsId == "timetable" -> {
                             val viewModel = rememberedViewModel(
                                 TimetableViewModel::class.java,
                                 "timetable",
@@ -388,11 +406,15 @@ fun AppShell(graph: AppGraph) {
                             TimetableSettingsScreen(
                                 viewModel = viewModel,
                                 onBack = { pluginSettingsId = null },
+                                onOpenWallpaper = { wallpaperOpen = true },
                             )
                         }
 
-                        "hotwater" -> HotWaterSettingsScreen(onBack = { pluginSettingsId = null })
-                        "scores" -> ScoresSettingsScreen(onBack = { pluginSettingsId = null })
+                        pluginSettingsId == "hotwater" ->
+                            HotWaterSettingsScreen(onBack = { pluginSettingsId = null })
+
+                        pluginSettingsId == "scores" ->
+                            ScoresSettingsScreen(onBack = { pluginSettingsId = null })
                         else -> active.content()
                     }
                 }
@@ -406,6 +428,7 @@ fun AppShell(graph: AppGraph) {
                 onSelect = { id ->
                     selectedId = id
                     pluginSettingsId = null
+                    wallpaperOpen = false
                 },
                 modifier = Modifier
                     .align(Alignment.BottomCenter)

@@ -6,6 +6,10 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.jsonObject
 
 class SettingsStore(context: Context) {
 
@@ -28,9 +32,27 @@ class SettingsStore(context: Context) {
 
     private fun load(): AppSettings {
         val raw = prefs.getString(KEY_SETTINGS, null) ?: return AppSettings()
-        return runCatching { json.decodeFromString(AppSettings.serializer(), raw) }
+        val migrated = migrateLegacyBackground(raw)
+        val settings = runCatching { json.decodeFromString(AppSettings.serializer(), migrated) }
             .getOrElse { AppSettings() }
+        if (migrated != raw) prefs.edit().putString(KEY_SETTINGS, migrated).apply()
+        return settings
     }
+
+    /** The timetable used to keep its own background image; it is now the timetable page wallpaper. */
+    private fun migrateLegacyBackground(raw: String): String = runCatching {
+        val root = Json.parseToJsonElement(raw).jsonObject.toMutableMap()
+        val legacy = (root["backgroundImage"] as? JsonPrimitive)?.contentOrNull
+            ?.takeIf { it.isNotBlank() } ?: return@runCatching raw
+        val pages = root["pageWallpapers"]?.jsonObject?.toMutableMap() ?: mutableMapOf()
+        if (!pages.containsKey("timetable")) {
+            pages["timetable"] = JsonPrimitive(legacy)
+            root["pageWallpapers"] = JsonObject(pages)
+        }
+        root.remove("backgroundImage")
+        root.remove("background")
+        JsonObject(root).toString()
+    }.getOrDefault(raw)
 
     private companion object {
         const val PREFS_NAME = "openschedule_settings"

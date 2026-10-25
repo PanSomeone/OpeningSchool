@@ -54,6 +54,8 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.openschedule.core.model.AppSettings
 import com.openschedule.core.ui.LocalFloatingNavSpace
@@ -132,29 +134,37 @@ fun WallpaperSettingsScreen(
     }
 
     pendingCrop?.let { crop ->
-        WallpaperCropScreen(
-            uri = crop.uri,
-            targetLabel = crop.label,
-            onCancel = { pendingCrop = null },
-            onApply = { name ->
-                val current = viewModel.settings.value
-                val target = crop.target
-                val oldName = when (target) {
-                    WallpaperTarget.Global -> current.appWallpaper
-                    is WallpaperTarget.Page -> current.pageWallpapers[target.id]
-                }
-                val next = when (target) {
-                    WallpaperTarget.Global -> current.copy(appWallpaper = name)
-                    is WallpaperTarget.Page -> current.copy(
-                        pageWallpapers = current.pageWallpapers + (target.id to name),
-                    )
-                }
-                viewModel.update { next }
-                deleteIfUnused(context, oldName, next)
-                pendingCrop = null
-                scope.launch { snackbar.showSnackbar("壁纸已更新") }
-            },
-        )
+        Dialog(
+            onDismissRequest = { pendingCrop = null },
+            properties = DialogProperties(
+                usePlatformDefaultWidth = false,
+                decorFitsSystemWindows = false,
+            ),
+        ) {
+            WallpaperCropScreen(
+                uri = crop.uri,
+                targetLabel = crop.label,
+                onCancel = { pendingCrop = null },
+                onApply = { name ->
+                    val current = viewModel.settings.value
+                    val target = crop.target
+                    val oldName = when (target) {
+                        WallpaperTarget.Global -> current.appWallpaper
+                        is WallpaperTarget.Page -> current.pageWallpapers[target.id]
+                    }
+                    val next = when (target) {
+                        WallpaperTarget.Global -> current.copy(appWallpaper = name)
+                        is WallpaperTarget.Page -> current.copy(
+                            pageWallpapers = current.pageWallpapers + (target.id to name),
+                        )
+                    }
+                    viewModel.update { next }
+                    deleteIfUnused(context, oldName, next)
+                    pendingCrop = null
+                    scope.launch { snackbar.showSnackbar("壁纸已更新") }
+                },
+            )
+        }
         return
     }
 

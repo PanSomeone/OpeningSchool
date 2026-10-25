@@ -61,7 +61,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.openschedule.core.model.AppSettings
-import com.openschedule.core.model.BackgroundStyle
 import com.openschedule.core.model.Period
 import com.openschedule.core.model.WeekMath
 import com.openschedule.core.ui.LocalCourseColors
@@ -72,10 +71,8 @@ import com.openschedule.core.ui.SectionTitle
 import com.openschedule.core.ui.SettingsCard
 import com.openschedule.core.ui.SettingsRow
 import kotlinx.coroutines.launch
-import java.io.File
 import java.time.Instant
 import java.time.LocalDate
-import kotlin.math.roundToInt
 import java.time.ZoneOffset
 import kotlin.math.roundToInt
 
@@ -84,6 +81,7 @@ import kotlin.math.roundToInt
 fun TimetableSettingsScreen(
     viewModel: TimetableViewModel,
     onBack: () -> Unit,
+    onOpenWallpaper: () -> Unit = {},
 ) {
     val settings by viewModel.settings.collectAsStateWithLifecycle()
     val timetable by viewModel.timetable.collectAsStateWithLifecycle()
@@ -106,23 +104,6 @@ fun TimetableSettingsScreen(
         val text = error ?: return@LaunchedEffect
         snackbar.showSnackbar(text)
         viewModel.consumeError()
-    }
-
-    val pickImage = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
-        if (uri == null) return@rememberLauncherForActivityResult
-        val name = "background_${System.currentTimeMillis()}.img"
-        runCatching {
-            context.contentResolver.openInputStream(uri)?.use { input ->
-                File(context.filesDir, name).outputStream().use { output -> input.copyTo(output) }
-            } ?: error("无法读取图片")
-        }.onSuccess {
-            settings.backgroundImage?.let { File(context.filesDir, it).delete() }
-            viewModel.updateSettings {
-                it.copy(backgroundImage = name, background = BackgroundStyle.IMAGE)
-            }
-        }.onFailure {
-            scope.launch { snackbar.showSnackbar("图片导入失败") }
-        }
     }
 
     val exportJson = rememberLauncherForActivityResult(
@@ -248,47 +229,36 @@ fun TimetableSettingsScreen(
                 SectionTitle("外观")
 
                 SettingsCard {
-                    Column(modifier = Modifier.padding(vertical = 10.dp)) {
-                        Text("背景", style = MaterialTheme.typography.bodyLarge)
-                        Spacer(Modifier.height(6.dp))
-                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                            BackgroundChoice("纯色", settings.background == BackgroundStyle.PLAIN) {
-                                viewModel.updateSettings { it.copy(background = BackgroundStyle.PLAIN) }
-                            }
-                            BackgroundChoice("淡色", settings.background == BackgroundStyle.TINT) {
-                                viewModel.updateSettings { it.copy(background = BackgroundStyle.TINT) }
-                            }
-                            BackgroundChoice("网格", settings.background == BackgroundStyle.GRID) {
-                                viewModel.updateSettings { it.copy(background = BackgroundStyle.GRID) }
-                            }
-                            BackgroundChoice("图片", settings.background == BackgroundStyle.IMAGE) {
-                                viewModel.updateSettings { it.copy(background = BackgroundStyle.IMAGE) }
-                            }
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable(onClick = onOpenWallpaper)
+                            .padding(vertical = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Icon(
+                            Icons.Filled.Image,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(20.dp),
+                        )
+                        Column(
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(start = 10.dp),
+                        ) {
+                            Text("课表壁纸", style = MaterialTheme.typography.bodyLarge)
+                            Text(
+                                text = "与全局壁纸统一管理，可为课表页单独设置",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
                         }
-                        if (settings.background == BackgroundStyle.IMAGE) {
-                            Row(
-                                modifier = Modifier.padding(top = 4.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                            ) {
-                                TextButton(onClick = { pickImage.launch("image/*") }) {
-                                    Icon(
-                                        Icons.Filled.Image,
-                                        contentDescription = null,
-                                        modifier = Modifier.size(18.dp),
-                                    )
-                                    Spacer(Modifier.width(6.dp))
-                                    Text(if (settings.backgroundImage == null) "选择图片" else "更换图片")
-                                }
-                                if (settings.backgroundImage != null) {
-                                    TextButton(onClick = {
-                                        settings.backgroundImage?.let { File(context.filesDir, it).delete() }
-                                        viewModel.updateSettings { it.copy(backgroundImage = null) }
-                                    }) {
-                                        Text("移除", color = MaterialTheme.colorScheme.error)
-                                    }
-                                }
-                            }
-                        }
+                        Icon(
+                            Icons.Filled.ChevronRight,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
                     }
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                     val cellHeight = settings.cellHeight
@@ -514,15 +484,6 @@ fun TimetableSettingsScreen(
             },
         )
     }
-}
-
-@Composable
-private fun BackgroundChoice(label: String, selected: Boolean, onClick: () -> Unit) {
-    FilterChip(
-        selected = selected,
-        onClick = onClick,
-        label = { Text(label) },
-    )
 }
 
 @Composable

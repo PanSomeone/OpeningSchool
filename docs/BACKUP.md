@@ -45,7 +45,8 @@ git show backup/pre-iteration-2026-10-25:path/to/file
 - SHA-256：`b8a53b4bb6e722b16fe8bb412cede8b3acb7cadb97281c69f907f5e92e919b94`
 - 应用内更新：`update.json` → 显示是否最新 → 应用内下载 → SHA-256 校验 → 系统安装。
 - 更新清单增加时间戳并禁用 HTTP 缓存，避免 raw GitHub 的 CDN 缓存导致版本延迟；下载完成或发现新版本后可“重新检查”。
-- 更新清单地址：`https://raw.githubusercontent.com/PanSomeone/OpeningSchool/main/update.json`；以后换 Gitee 只改 `UpdateViewModel.MANIFEST_URL`。
+- 更新源：应用优先读取 Gitee 的 `raw/main/update.json`，失败时回退 GitHub raw；清单里的 `apkUrl` 指向 Gitee 发行版附件，`fallbackApkUrl` 指向 GitHub 备用附件。
+- Gitee 仓库（`https://gitee.com/PanSomeone/OpeningSchool`）只保留 README、`update.json`、`announcements.json` 和发行版附件，不推送源码；每次发布后同步更新 Gitee 与 GitHub 两份清单。
 
 ## 2026-10-25 beta6
 
@@ -112,6 +113,14 @@ git show backup/pre-iteration-2026-10-25:path/to/file
 - 新增公告：`announcements.json` 远程清单 + 内置兜底，主页铃铛未读角标，设置 →「公告」历史列表、详情与全部已读。
 - 天气地区搜索改为内置省/市/区县中心坐标（AreaCity 数据，含拼音），Open-Meteo 仅作兜底。
 - 仓库新增 `LICENSE`（AGPL-3.0）、`NOTICE`、`core/plugin-api/LICENSE` 与 `adapter/sample-external/LICENSE`（Apache-2.0）。
+
+## 2026-10-25 beta14
+
+- 版本：`1.0.0-beta14`（versionCode 15）
+- SHA-256：`826c3b3e2d371d1ffda48bd235d8ae59464ca114bc042f72c5adde2ffe96f74a`
+- 应用内更新默认源切换为 Gitee：优先读取 Gitee 的 `update.json` 与发行版 APK，失败时回退 GitHub。
+- 公告源同样改为 Gitee 优先、GitHub 备用。
+- Gitee 仓库按 798QuSiBa 的方式只保留下载页与更新清单，不保留源代码；源码与 Issues 仍以 GitHub 为准。
 
 ## 当前验证记录
 

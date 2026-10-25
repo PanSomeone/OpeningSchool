@@ -1,9 +1,10 @@
 {
-  "version": "1.0.0-beta13",
-  "title": "开源大学 1.0.0-beta13",
-  "notes": "本次更新：\n- 课表页左右滑动即可切换周次，双击「第 N 周」仍会回到本周\n- 选择壁纸后进入预览页，可拖动、双指或滑杆缩放调整裁切范围，确认后应用\n- 新增公告：主页右上角铃铛查看未读公告，设置 →「公告」查看历史并一键全部已读\n- 天气地区搜索精确到省/市/区县，支持拼音（如 hongan），Open-Meteo 作为兜底\n- 仓库新增 LICENSE（AGPL-3.0）与 NOTICE，插件 API 采用 Apache-2.0",
-  "pageUrl": "https://github.com/PanSomeone/OpeningSchool/releases/tag/v1.0.0-beta13",
-  "apkUrl": "https://github.com/PanSomeone/OpeningSchool/releases/download/v1.0.0-beta13/OpeningSchool-1.0.0-beta13.apk",
-  "sha256": "f1a00c6bb5d7d2b688173c44364e637b1dde1f8a8ee8003809f8a520011d5fe1",
-  "sizeBytes": 2762556
+  "version": "1.0.0-beta14",
+  "title": "开源大学 1.0.0-beta14",
+  "notes": "本次更新：\n- 应用内更新默认改用 Gitee，GitHub 作为备用源\n- 公告也优先从 Gitee 获取，失败时回退 GitHub\n- 壁纸改为按屏幕分辨率保存，裁切后更清晰；课表背景统一到「设置 → 壁纸 → 课表」\n- Gitee 只发布安装包与更新清单，源代码继续保留在 GitHub",
+  "pageUrl": "https://gitee.com/PanSomeone/OpeningSchool/releases/tag/v1.0.0-beta14",
+  "apkUrl": "https://gitee.com/PanSomeone/OpeningSchool/releases/download/v1.0.0-beta14/OpeningSchool-1.0.0-beta14.apk",
+  "fallbackApkUrl": "https://github.com/PanSomeone/OpeningSchool/releases/download/v1.0.0-beta14/OpeningSchool-1.0.0-beta14.apk",
+  "sha256": "826c3b3e2d371d1ffda48bd235d8ae59464ca114bc042f72c5adde2ffe96f74a",
+  "sizeBytes": 2746368
 }
