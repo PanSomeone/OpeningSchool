@@ -31,6 +31,7 @@ data class UpdateInfo(
     val apkUrl: String,
     val sha256: String,
     val sizeBytes: Long,
+    val fallbackApkUrl: String = "",
 )
 
 sealed interface UpdateState {
@@ -128,7 +129,7 @@ class UpdateViewModel(
 
     fun openReleasePage() {
         val url = (state.value as? UpdateState.Available)?.info?.pageUrl
-            ?: "https://github.com/PanSomeone/OpeningSchool/releases"
+            ?: RELEASES_PAGE
         runCatching {
             context.startActivity(
                 Intent(Intent.ACTION_VIEW, Uri.parse(url)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
@@ -137,7 +138,20 @@ class UpdateViewModel(
     }
 
     private fun fetchManifest(): UpdateInfo {
-        val url = "$MANIFEST_URL?t=${System.currentTimeMillis()}"
+        var lastError: Throwable? = null
+        for (baseUrl in MANIFEST_URLS) {
+            try {
+                return fetchManifestFrom(baseUrl)
+            } catch (error: Throwable) {
+                lastError = error
+                AppLog.w("Update", "更新清单获取失败 $baseUrl: ${error.message}")
+            }
+        }
+        throw lastError ?: IOException("更新清单获取失败")
+    }
+
+    private fun fetchManifestFrom(baseUrl: String): UpdateInfo {
+        val url = "$baseUrl?t=${System.currentTimeMillis()}"
         val connection = URL(url).openConnection() as HttpURLConnection
         connection.connectTimeout = 6_000
         connection.readTimeout = 8_000
@@ -164,11 +178,13 @@ class UpdateViewModel(
                 version = version,
                 title = json.optString("title").ifBlank { "开源大学 $version" },
                 notes = json.optString("notes"),
-                pageUrl = json.optString("pageUrl")
-                    .ifBlank { "https://github.com/PanSomeone/OpeningSchool/releases" },
+                pageUrl = json.optString("pageUrl").ifBlank { RELEASES_PAGE },
                 apkUrl = apkUrl,
                 sha256 = json.optString("sha256").trim(),
                 sizeBytes = json.optLong("sizeBytes"),
+                fallbackApkUrl = json.optString("fallbackApkUrl").trim()
+                    .takeIf { it.startsWith("https://") }
+                    .orEmpty(),
             )
         } finally {
             connection.disconnect()
@@ -176,6 +192,23 @@ class UpdateViewModel(
     }
 
     private fun downloadApk(info: UpdateInfo): Pair<File, Boolean> {
+        val urls = listOf(info.apkUrl, info.fallbackApkUrl)
+            .filter { it.startsWith("https://") }
+            .distinct()
+        var lastError: Throwable? = null
+        for (url in urls) {
+            try {
+                return downloadApkFrom(info, url)
+            } catch (error: Throwable) {
+                lastError = error
+                AppLog.w("Update", "下载失败 $url: ${error.message}")
+                _state.value = UpdateState.Downloading(0f)
+            }
+        }
+        throw lastError ?: IOException("没有可用的下载地址")
+    }
+
+    private fun downloadApkFrom(info: UpdateInfo, url: String): Pair<File, Boolean> {
         val dir = File(context.cacheDir, "updates").apply { mkdirs() }
         dir.listFiles()?.filter { it.isFile }?.forEach { it.delete() }
         val safeVersion = info.version.replace(Regex("[^A-Za-z0-9._-]"), "_")
@@ -183,7 +216,7 @@ class UpdateViewModel(
         val temp = File(dir, "update.part")
         var connection: HttpURLConnection? = null
         try {
-            val http = URL(info.apkUrl).openConnection() as HttpURLConnection
+            val http = URL(url).openConnection() as HttpURLConnection
             connection = http
             http.connectTimeout = 10_000
             http.readTimeout = 30_000
@@ -237,11 +270,14 @@ class UpdateViewModel(
 
     private fun appVersionName(context: Context): String = runCatching {
         context.packageManager.getPackageInfo(context.packageName, 0).versionName
-    }.getOrNull().orEmpty().ifBlank { "1.0.0-beta13" }
+    }.getOrNull().orEmpty().ifBlank { "1.0.0-beta14" }
 
     private companion object {
-        const val MANIFEST_URL =
-            "https://raw.githubusercontent.com/PanSomeone/OpeningSchool/main/update.json"
+        const val RELEASES_PAGE = "https://gitee.com/PanSomeone/OpeningSchool/releases"
+        val MANIFEST_URLS = listOf(
+            "https://gitee.com/PanSomeone/OpeningSchool/raw/main/update.json",
+            "https://raw.githubusercontent.com/PanSomeone/OpeningSchool/main/update.json",
+        )
     }
 }
 

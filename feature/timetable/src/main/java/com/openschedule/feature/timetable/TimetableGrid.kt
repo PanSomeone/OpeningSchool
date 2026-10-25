@@ -1,8 +1,6 @@
 package com.openschedule.feature.timetable
 
-import android.graphics.BitmapFactory
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
@@ -24,17 +22,12 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.produceState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.onClick
@@ -45,7 +38,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.openschedule.core.model.AppSettings
-import com.openschedule.core.model.BackgroundStyle
 import com.openschedule.core.model.Course
 import com.openschedule.core.model.CourseSlot
 import com.openschedule.core.model.Timetable
@@ -53,11 +45,6 @@ import com.openschedule.core.model.WeekMath
 import com.openschedule.core.model.normalizedColor
 import com.openschedule.core.ui.LocalCourseColors
 import com.openschedule.core.ui.LocalFloatingNavSpace
-import com.openschedule.core.ui.LocalIsDarkTheme
-import com.openschedule.core.ui.LocalWallpaperActive
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import java.io.File
 import java.time.LocalDate
 
 @Composable
@@ -101,7 +88,6 @@ fun TimetableGrid(
         )
 
         Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
-            BackgroundLayer(settings)
             Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
                 Box {
                     Row(modifier = Modifier.height(gridHeight)) {
@@ -355,54 +341,5 @@ private fun DayColumn(
 
 private fun displayLocation(raw: String): String =
     raw.trim().replaceFirst(Regex("^本部[\\s·-]+"), "")
-
-@Composable
-private fun BackgroundLayer(settings: AppSettings) {
-    if (LocalWallpaperActive.current) return
-    val dark = LocalIsDarkTheme.current
-    val context = LocalContext.current
-    val image by produceState<ImageBitmap?>(initialValue = null, settings.backgroundImage) {
-        value = withContext(Dispatchers.IO) {
-            val name = settings.backgroundImage ?: return@withContext null
-            val file = File(context.filesDir, name)
-            if (!file.exists()) return@withContext null
-            BitmapFactory.decodeFile(file.absolutePath)?.asImageBitmap()
-        }
-    }
-
-    Box(modifier = Modifier.fillMaxSize()) {
-        when {
-            settings.background == BackgroundStyle.IMAGE && image != null -> {
-                Image(
-                    bitmap = image!!,
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.matchParentSize(),
-                )
-                Box(
-                    modifier = Modifier
-                        .matchParentSize()
-                        .background(Color.Black.copy(alpha = if (dark) 0.55f else 0.35f)),
-                )
-            }
-
-            settings.background == BackgroundStyle.TINT -> {
-                Box(
-                    modifier = Modifier
-                        .matchParentSize()
-                        .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.28f)),
-                )
-            }
-
-            else -> {
-                Box(
-                    modifier = Modifier
-                        .matchParentSize()
-                        .background(MaterialTheme.colorScheme.surface),
-                )
-            }
-        }
-    }
-}
 
 private val PERIOD_COLUMN_WIDTH = 56.dp

@@ -71,6 +71,8 @@ import kotlin.math.roundToInt
 private const val MAX_IMAGE_SIDE = 2560
 private const val MAX_ZOOM = 4f
 
+private data class CropImage(val bitmap: Bitmap, val sample: Int)
+
 @Composable
 fun WallpaperCropScreen(
     uri: Uri,
@@ -81,7 +83,7 @@ fun WallpaperCropScreen(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var decoding by remember(uri) { mutableStateOf(true) }
-    val bitmap by produceState<Bitmap?>(initialValue = null, uri) {
+    val crop by produceState<CropImage?>(initialValue = null, uri) {
         value = withContext(Dispatchers.IO) { loadCropBitmap(context, uri) }
         decoding = false
     }
@@ -90,8 +92,8 @@ fun WallpaperCropScreen(
     var offset by remember { mutableStateOf(Offset.Zero) }
     var saving by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
-    val image = remember(bitmap) { bitmap?.asImageBitmap() }
-    val source = bitmap
+    val source = crop?.bitmap
+    val image = remember(source) { source?.asImageBitmap() }
 
     BackHandler(onBack = onCancel)
 
@@ -267,7 +269,7 @@ fun WallpaperCropScreen(
                 ) {
                     Button(
                         onClick = {
-                            val current = source ?: return@Button
+                            val current = crop ?: return@Button
                             if (saving) return@Button
                             saving = true
                             errorMessage = null
@@ -276,7 +278,7 @@ fun WallpaperCropScreen(
                             val size = containerSize
                             scope.launch {
                                 val name = withContext(Dispatchers.IO) {
-                                    saveCrop(context, current, size, applyZoom, applyOffset)
+                                    saveCrop(context, uri, current, size, applyZoom, applyOffset)
                                 }
                                 saving = false
                                 if (name == null) {
@@ -308,7 +310,7 @@ fun WallpaperCropScreen(
     }
 }
 
-private fun loadCropBitmap(context: Context, uri: Uri): Bitmap? = runCatching {
+private fun loadCropBitmap(context: Context, uri: Uri): CropImage? = runCatching {
     val resolver = context.contentResolver
     val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
     val readable = resolver.openInputStream(uri)?.use { input ->
@@ -324,14 +326,18 @@ private fun loadCropBitmap(context: Context, uri: Uri): Bitmap? = runCatching {
     while (max(bounds.outWidth, bounds.outHeight) / sample > MAX_IMAGE_SIDE) {
         sample *= 2
     }
+    val bitmap = decodeCropBitmap(context, uri, sample) ?: return null
+    CropImage(bitmap, sample)
+}.onFailure { error ->
+    AppLog.w("WallpaperCrop", "壁纸读取异常: ${error.message}", error)
+}.getOrNull()
+
+private fun decodeCropBitmap(context: Context, uri: Uri, sample: Int): Bitmap? {
+    val resolver = context.contentResolver
     val options = BitmapFactory.Options().apply { inSampleSize = sample }
     var bitmap = resolver.openInputStream(uri)?.use {
         BitmapFactory.decodeStream(it, null, options)
-    }
-    if (bitmap == null) {
-        AppLog.w("WallpaperCrop", "图片解码失败 $uri ${bounds.outWidth}x${bounds.outHeight} sample=$sample")
-        return null
-    }
+    } ?: return null
 
     val orientation = runCatching {
         resolver.openInputStream(uri)?.use { input ->
@@ -343,10 +349,8 @@ private fun loadCropBitmap(context: Context, uri: Uri): Bitmap? = runCatching {
     }.getOrNull() ?: ExifInterface.ORIENTATION_NORMAL
     val rotated = rotateBitmap(bitmap, orientation)
     if (rotated !== bitmap) bitmap.recycle()
-    rotated
-}.onFailure { error ->
-    AppLog.w("WallpaperCrop", "壁纸读取异常: ${error.message}", error)
-}.getOrNull()
+    return rotated
+}
 
 private fun rotateBitmap(bitmap: Bitmap, orientation: Int): Bitmap {
     val matrix = Matrix()
@@ -393,41 +397,89 @@ private fun clampOffset(
 
 private fun saveCrop(
     context: Context,
-    bitmap: Bitmap,
+    uri: Uri,
+    source: CropImage,
     container: IntSize,
     zoom: Float,
     offset: Offset,
 ): String? {
     if (container.width <= 0 || container.height <= 0) return null
+    val preview = source.bitmap
     val base = max(
-        container.width / bitmap.width.toFloat(),
-        container.height / bitmap.height.toFloat(),
+        container.width / preview.width.toFloat(),
+        container.height / preview.height.toFloat(),
     )
     val scale = base * zoom
-    val sourceWidth = (container.width / scale)
+    val previewWidth = (container.width / scale)
         .roundToInt()
-        .coerceIn(1, bitmap.width)
-    val sourceHeight = (container.height / scale)
+        .coerceIn(1, preview.width)
+    val previewHeight = (container.height / scale)
         .roundToInt()
-        .coerceIn(1, bitmap.height)
-    val sourceX = ((bitmap.width - sourceWidth) / 2f - offset.x / scale)
+        .coerceIn(1, preview.height)
+    val previewX = ((preview.width - previewWidth) / 2f - offset.x / scale)
         .roundToInt()
-        .coerceIn(0, bitmap.width - sourceWidth)
-    val sourceY = ((bitmap.height - sourceHeight) / 2f - offset.y / scale)
+        .coerceIn(0, preview.width - previewWidth)
+    val previewY = ((preview.height - previewHeight) / 2f - offset.y / scale)
         .roundToInt()
-        .coerceIn(0, bitmap.height - sourceHeight)
+        .coerceIn(0, preview.height - previewHeight)
+
+    val imageX = previewX.toLong() * source.sample
+    val imageY = previewY.toLong() * source.sample
+    val imageWidth = previewWidth.toLong() * source.sample
+    val imageHeight = previewHeight.toLong() * source.sample
+
+    // Decode at a sample that still covers the screen, so landscape photos are
+    // not saved smaller than the display and then upscaled into a soft blur.
+    var saveSample = source.sample
+    while (saveSample > 1 &&
+        (imageWidth / saveSample < container.width ||
+            imageHeight / saveSample < container.height)
+    ) {
+        saveSample /= 2
+    }
+    var working = preview
+    var workingSample = source.sample
+    if (saveSample != source.sample) {
+        decodeCropBitmap(context, uri, saveSample)?.let {
+            working = it
+            workingSample = saveSample
+        }
+    }
+
+    val cropX = (imageX.toDouble() / workingSample)
+        .roundToInt()
+        .coerceIn(0, working.width - 1)
+    val cropY = (imageY.toDouble() / workingSample)
+        .roundToInt()
+        .coerceIn(0, working.height - 1)
+    val cropWidth = (imageWidth.toDouble() / workingSample)
+        .roundToInt()
+        .coerceIn(1, working.width - cropX)
+    val cropHeight = (imageHeight.toDouble() / workingSample)
+        .roundToInt()
+        .coerceIn(1, working.height - cropY)
 
     val cropped = runCatching {
-        Bitmap.createBitmap(bitmap, sourceX, sourceY, sourceWidth, sourceHeight)
+        Bitmap.createBitmap(working, cropX, cropY, cropWidth, cropHeight)
     }.getOrNull() ?: return null
+    val output = if (cropped.width == container.width && cropped.height == container.height) {
+        cropped
+    } else {
+        runCatching {
+            Bitmap.createScaledBitmap(cropped, container.width, container.height, true)
+        }.getOrNull() ?: cropped
+    }
+
     val name = "wallpaper_${System.currentTimeMillis()}.img"
     val file = File(context.filesDir, name)
     val saved = runCatching {
-        FileOutputStream(file).use { output ->
-            check(cropped.compress(Bitmap.CompressFormat.JPEG, 92, output))
+        FileOutputStream(file).use { stream ->
+            check(output.compress(Bitmap.CompressFormat.JPEG, 95, stream))
         }
     }.isSuccess
-    if (cropped !== bitmap) cropped.recycle()
+    if (output !== cropped) output.recycle()
+    if (cropped !== working) cropped.recycle()
+    if (working !== preview) working.recycle()
     if (!saved) {
         file.delete()
         return null

@@ -8,9 +8,6 @@ const val MAX_NAV_SLOTS = 5
 enum class ThemeMode { SYSTEM, LIGHT, DARK }
 
 @Serializable
-enum class BackgroundStyle { PLAIN, TINT, GRID, IMAGE }
-
-@Serializable
 data class NavSlot(
     val id: String,
     val label: String = "",
@@ -27,8 +24,6 @@ data class AppSettings(
     val showWeekend: Boolean = true,
     /** Height of one period row, in dp. */
     val cellHeight: Int = 64,
-    val background: BackgroundStyle = BackgroundStyle.GRID,
-    val backgroundImage: String? = null,
     val nav: List<NavSlot> = emptyList(),
     /** Built-in plugins the user has removed from the app. */
     val disabledPlugins: Set<String> = emptySet(),

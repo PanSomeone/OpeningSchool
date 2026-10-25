@@ -44,12 +44,23 @@ class AnnouncementStore(context: Context) {
     private val _refreshing = MutableStateFlow(false)
     val refreshing: StateFlow<Boolean> = _refreshing.asStateFlow()
 
-    /** Keeps the last good feed when the network fails; returns false on failure. */
+    /** Keeps the last good feed when every source fails; returns false on failure. */
     suspend fun refresh(): Boolean = withContext(Dispatchers.IO) {
         if (_refreshing.value) return@withContext false
         _refreshing.value = true
         try {
-            val url = URL("$FEED_URL?t=${System.currentTimeMillis()}")
+            for (feedUrl in FEED_URLS) {
+                if (fetchFeed(feedUrl)) return@withContext true
+            }
+            false
+        } finally {
+            _refreshing.value = false
+        }
+    }
+
+    private fun fetchFeed(baseUrl: String): Boolean {
+        return try {
+            val url = URL("$baseUrl?t=${System.currentTimeMillis()}")
             val connection = (url.openConnection() as HttpURLConnection).apply {
                 connectTimeout = 8000
                 readTimeout = 8000
@@ -58,10 +69,10 @@ class AnnouncementStore(context: Context) {
                 setRequestProperty("Cache-Control", "no-cache")
             }
             try {
-                if (connection.responseCode !in 200..299) return@withContext false
+                if (connection.responseCode !in 200..299) return false
                 val raw = connection.inputStream.bufferedReader().use { it.readText() }
                 val list = parseFeed(raw)
-                if (list.isEmpty()) return@withContext false
+                if (list.isEmpty()) return false
                 cacheFile.writeText(raw)
                 _announcements.value = list
                 AppLog.i("Announcement", "公告已更新 ${list.size} 条")
@@ -72,10 +83,8 @@ class AnnouncementStore(context: Context) {
         } catch (error: CancellationException) {
             throw error
         } catch (error: Throwable) {
-            AppLog.w("Announcement", "公告更新失败: ${error.message}")
+            AppLog.w("Announcement", "公告源失败 $baseUrl: ${error.message}")
             false
-        } finally {
-            _refreshing.value = false
         }
     }
 
@@ -122,8 +131,10 @@ class AnnouncementStore(context: Context) {
         const val PREFS_NAME = "openschedule_announcements"
         const val KEY_READ_IDS = "read_ids"
         const val CACHE_FILE = "announcements.json"
-        const val FEED_URL =
-            "https://raw.githubusercontent.com/PanSomeone/OpeningSchool/main/announcements.json"
+        val FEED_URLS = listOf(
+            "https://gitee.com/PanSomeone/OpeningSchool/raw/main/announcements.json",
+            "https://raw.githubusercontent.com/PanSomeone/OpeningSchool/main/announcements.json",
+        )
         val json = Json { ignoreUnknownKeys = true; isLenient = true }
     }
 }
