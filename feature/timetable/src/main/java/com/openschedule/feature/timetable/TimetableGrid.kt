@@ -39,6 +39,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -319,10 +320,10 @@ private fun DayColumn(
                         fontSize = (11f * textScale).sp,
                         lineHeight = (12.5f * textScale).sp,
                         fontWeight = FontWeight.Medium,
-                        maxLines = 2,
+                        maxLines = if (slot.periodSpan >= 2) 3 else 2,
                         overflow = TextOverflow.Ellipsis,
                     )
-                    val detailColor = LocalContentColor.current.copy(alpha = 0.8f)
+                    val detailColor = LocalContentColor.current.copy(alpha = 0.82f)
                     if (course.teacher.isNotBlank()) {
                         Text(
                             text = course.teacher,
@@ -341,7 +342,8 @@ private fun DayColumn(
                             fontSize = (8.5f * textScale).sp,
                             lineHeight = (9.5f * textScale).sp,
                             color = detailColor,
-                            maxLines = if (slot.periodSpan >= 2) 2 else 1,
+                            fontStyle = FontStyle.Italic,
+                            maxLines = if (slot.periodSpan >= 2) 3 else 2,
                             overflow = TextOverflow.Ellipsis,
                         )
                     }

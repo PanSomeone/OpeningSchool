@@ -185,7 +185,10 @@ fun AppShell(graph: AppGraph) {
                         externalAdapters = graph.externalAdapters,
                     )
                 }
-                TimetableScreen(viewModel)
+                TimetableScreen(
+                    viewModel = viewModel,
+                    onOpenSettings = { pluginSettingsId = "timetable" },
+                )
             },
         ),
         PluginDestination(

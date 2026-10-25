@@ -1,6 +1,8 @@
 package com.openschedule.feature.timetable
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,11 +23,14 @@ import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
-import androidx.compose.material.icons.filled.Today
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.UploadFile
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -60,7 +65,10 @@ import java.time.ZoneOffset
 private data class WebTarget(val name: String, val url: String)
 
 @Composable
-fun TimetableScreen(viewModel: TimetableViewModel) {
+fun TimetableScreen(
+    viewModel: TimetableViewModel,
+    onOpenSettings: () -> Unit = {},
+) {
     val timetable by viewModel.timetable.collectAsStateWithLifecycle()
     val timetables by viewModel.timetables.collectAsStateWithLifecycle()
     val settings by viewModel.settings.collectAsStateWithLifecycle()
@@ -110,6 +118,7 @@ fun TimetableScreen(viewModel: TimetableViewModel) {
                     editorOpen = true
                 },
                 onImport = { showImport = true },
+                onSettings = onOpenSettings,
             )
 
             WeekStrip(
@@ -254,7 +263,9 @@ private fun TimetableHeader(
     onSwitch: () -> Unit,
     onAdd: () -> Unit,
     onImport: () -> Unit,
+    onSettings: () -> Unit,
 ) {
+    var menuOpen by remember { mutableStateOf(false) }
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -285,16 +296,50 @@ private fun TimetableHeader(
                     .size(24.dp),
             )
         }
-        IconButton(onClick = onAdd) {
-            Icon(Icons.Filled.Add, contentDescription = "添加课程")
-        }
-        IconButton(onClick = onImport) {
-            Icon(Icons.Filled.UploadFile, contentDescription = "导入课表")
+        Box {
+            IconButton(onClick = { menuOpen = true }) {
+                Icon(Icons.Filled.MoreVert, contentDescription = "更多操作")
+            }
+            DropdownMenu(
+                expanded = menuOpen,
+                onDismissRequest = { menuOpen = false },
+            ) {
+                DropdownMenuItem(
+                    text = { Text("添加课程") },
+                    onClick = {
+                        menuOpen = false
+                        onAdd()
+                    },
+                    leadingIcon = {
+                        Icon(Icons.Filled.Add, contentDescription = null)
+                    },
+                )
+                DropdownMenuItem(
+                    text = { Text("导入课表") },
+                    onClick = {
+                        menuOpen = false
+                        onImport()
+                    },
+                    leadingIcon = {
+                        Icon(Icons.Filled.UploadFile, contentDescription = null)
+                    },
+                )
+                DropdownMenuItem(
+                    text = { Text("课表设置") },
+                    onClick = {
+                        menuOpen = false
+                        onSettings()
+                    },
+                    leadingIcon = {
+                        Icon(Icons.Filled.Settings, contentDescription = null)
+                    },
+                )
+            }
         }
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
+@OptIn(ExperimentalLayoutApi::class, ExperimentalFoundationApi::class)
 @Composable
 private fun WeekStrip(
     week: Int,
@@ -346,7 +391,10 @@ private fun WeekStrip(
                     fontWeight = FontWeight.Medium,
                     textAlign = TextAlign.Center,
                     modifier = Modifier
-                        .clickable { pickerOpen = true }
+                        .combinedClickable(
+                            onClick = { pickerOpen = true },
+                            onDoubleClick = onToday,
+                        )
                         .padding(horizontal = 10.dp, vertical = 8.dp),
                 )
                 IconButton(
@@ -391,9 +439,6 @@ private fun WeekStrip(
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.padding(start = 4.dp),
             )
-        }
-        IconButton(onClick = onToday) {
-            Icon(Icons.Filled.Today, contentDescription = "回到本周")
         }
     }
 
@@ -469,6 +514,12 @@ private fun WeekStrip(
                             }
                         }
                     }
+                    Text(
+                        text = "双击「第 N 周」回到本周",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(top = 10.dp),
+                    )
                 }
             },
             confirmButton = {

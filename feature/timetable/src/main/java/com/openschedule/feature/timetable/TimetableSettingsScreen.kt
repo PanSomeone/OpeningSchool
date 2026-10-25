@@ -5,6 +5,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -15,6 +16,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -36,6 +38,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -51,13 +54,17 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.openschedule.core.model.AppSettings
 import com.openschedule.core.model.BackgroundStyle
 import com.openschedule.core.model.Period
 import com.openschedule.core.model.WeekMath
+import com.openschedule.core.ui.LocalCourseColors
 import com.openschedule.core.ui.LocalFloatingNavSpace
 import com.openschedule.core.ui.NumberStepper
 import com.openschedule.core.ui.ScreenHeader
@@ -332,6 +339,11 @@ fun TimetableSettingsScreen(
                             },
                             valueRange = AppSettings.MIN_COURSE_TEXT_SCALE..AppSettings.MAX_COURSE_TEXT_SCALE,
                         )
+                        CourseCardPreview(
+                            cellHeight = sliderValue,
+                            textScale = textScaleValue,
+                            showWeekend = settings.showWeekend,
+                        )
                     }
                 }
 
@@ -511,6 +523,65 @@ private fun BackgroundChoice(label: String, selected: Boolean, onClick: () -> Un
         onClick = onClick,
         label = { Text(label) },
     )
+}
+
+@Composable
+private fun CourseCardPreview(
+    cellHeight: Float,
+    textScale: Float,
+    showWeekend: Boolean,
+) {
+    val palette = LocalCourseColors.current.first()
+    BoxWithConstraints(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 10.dp),
+    ) {
+        val days = if (showWeekend) 7 else 5
+        val dayWidth = ((maxWidth - 56.dp) / days).coerceAtLeast(36.dp)
+        Column {
+            Text(
+                text = "预览 · 约 ${dayWidth.value.roundToInt()}dp 一列 · 两节",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Surface(
+                color = palette.container,
+                contentColor = palette.onContainer,
+                shape = RoundedCornerShape(8.dp),
+                modifier = Modifier
+                    .padding(top = 4.dp)
+                    .width(dayWidth - 4.dp)
+                    .height((cellHeight * 2 - 4).coerceAtLeast(80f).dp),
+            ) {
+                Column(modifier = Modifier.padding(horizontal = 3.dp, vertical = 2.dp)) {
+                    Text(
+                        text = "智能媒体数据处理",
+                        fontSize = (11f * textScale).sp,
+                        lineHeight = (12.5f * textScale).sp,
+                        maxLines = 3,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    Text(
+                        text = "高俊祥",
+                        fontSize = (8.5f * textScale).sp,
+                        lineHeight = (9.5f * textScale).sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.padding(top = 2.dp),
+                    )
+                    Text(
+                        text = "三教A403",
+                        fontSize = (8.5f * textScale).sp,
+                        lineHeight = (9.5f * textScale).sp,
+                        fontStyle = FontStyle.Italic,
+                        maxLines = 3,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+            }
+        }
+    }
 }
 
 @Composable

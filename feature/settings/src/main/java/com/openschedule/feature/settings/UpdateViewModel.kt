@@ -237,7 +237,7 @@ class UpdateViewModel(
 
     private fun appVersionName(context: Context): String = runCatching {
         context.packageManager.getPackageInfo(context.packageName, 0).versionName
-    }.getOrNull().orEmpty().ifBlank { "1.0.0-beta7" }
+    }.getOrNull().orEmpty().ifBlank { "1.0.0-beta8" }
 
     private companion object {
         const val MANIFEST_URL =
