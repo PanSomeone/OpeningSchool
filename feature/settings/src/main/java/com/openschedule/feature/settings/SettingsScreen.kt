@@ -793,7 +793,7 @@ private fun appVersionName(context: Context): String = runCatching {
         context.packageManager.getPackageInfo(context.packageName, 0)
     }
     info.versionName
-}.getOrNull().orEmpty().ifBlank { "1.0.0-beta5" }
+}.getOrNull().orEmpty().ifBlank { "1.0.0-beta6" }
 
 private const val AUTHOR = "PanSomeone"
 

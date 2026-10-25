@@ -91,4 +91,15 @@ class WeekMathTest {
         assertEquals(monday.plusDays(8), WeekMath.dateOfWeekDay(monday, week = 2, column = 2, weekStartDay = 1))
         assertNull(WeekMath.dateOfWeekDay(null, week = 1, column = 1, weekStartDay = 1))
     }
+
+    @Test
+    fun dateOfWeekDayHonorsConfiguredWeekStart() {
+        val aug31 = LocalDate.of(2026, 8, 31)
+        assertEquals(aug31, WeekMath.dateOfWeekDay(aug31, week = 1, column = 1, weekStartDay = 1))
+        assertEquals(aug31.plusDays(6), WeekMath.dateOfWeekDay(aug31, week = 1, column = 7, weekStartDay = 1))
+        assertEquals(LocalDate.of(2026, 10, 19), WeekMath.dateOfWeekDay(aug31, week = 8, column = 1, weekStartDay = 1))
+        assertEquals(aug31.minusDays(1), WeekMath.dateOfWeekDay(aug31, week = 1, column = 1, weekStartDay = 7))
+        assertEquals(aug31, WeekMath.dateOfWeekDay(aug31, week = 1, column = 2, weekStartDay = 7))
+        assertEquals(8, WeekMath.currentWeek(LocalDate.of(2026, 10, 25), aug31, 20))
+    }
 }

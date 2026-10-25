@@ -58,6 +58,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
@@ -1030,7 +1031,9 @@ private fun TodayWidget(
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         CourseTimes(timetable, occurrence.slot)
                         Surface(
-                            color = palette[normalizedColor(occurrence.course.color)].container,
+                            color = occurrence.course.customColor
+                                ?.let { Color(it.toInt()) }
+                                ?: palette[normalizedColor(occurrence.course.color)].container,
                             modifier = Modifier
                                 .padding(start = 5.dp)
                                 .width(3.dp)

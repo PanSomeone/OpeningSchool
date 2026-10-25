@@ -47,6 +47,15 @@ git show backup/pre-iteration-2026-10-25:path/to/file
 - 更新清单增加时间戳并禁用 HTTP 缓存，避免 raw GitHub 的 CDN 缓存导致版本延迟；下载完成或发现新版本后可“重新检查”。
 - 更新清单地址：`https://raw.githubusercontent.com/PanSomeone/OpeningSchool/main/update.json`；以后换 Gitee 只改 `UpdateViewModel.MANIFEST_URL`。
 
+## 2026-10-25 beta6
+
+- 版本：`1.0.0-beta6`（versionCode 7）
+- 本地产物：`app/build/outputs/apk/release/app-release.apk`
+- SHA-256：`5b5c4e2d842e4417175e77bc7366abc51d81e52be926ab5142186391eacb1d69`
+- 周次条直接显示本周日期范围；点击日期可设置开学第一天，日头显示实际日期。
+- 课程字号可调；课程颜色 20 色、支持自定义色相/十六进制。
+- 应用内更新继续使用 `update.json`，版本比较、下载、SHA-256 校验和系统安装均已验证。
+
 ## 当前验证记录
 
 - 全部单元测试通过（新增华农课表/成绩解析、版本比较回归测试）。

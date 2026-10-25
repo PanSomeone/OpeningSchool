@@ -1,7 +1,7 @@
 # 开源大学（OpeningSchool）
 功能说明
 
-> 当前测试版：`1.0.0-beta5`（versionCode 6） · [下载与更新](https://github.com/PanSomeone/OpeningSchool/releases)
+> 当前测试版：`1.0.0-beta6`（versionCode 7） · [下载与更新](https://github.com/PanSomeone/OpeningSchool/releases)
 
 ## 运行环境
 - **平台**：Android（minSdk 26）
@@ -21,8 +21,12 @@
 - 支持多张独立课表，可切换、新建、重命名、删除
 - 节次列同时显示上下课时间
 - 一门课可添加多个「星期 + 起止节次」时间段，支持设置周次、颜色、备注和跨节合并
-- 周次切换（‹ 第 N 周 ›），点击可跳转；学期开始日期、总周数、一周起始日、周末显示均可调
+- 周次切换（‹ 第 N 周 ›），点击可跳转；点击周次条右侧的日期可直接设置开学第一天，设置后第一周第一天就是该日期
+- 学期开始日期、总周数、一周起始日、周末显示均可调；日期范围会显示在周次条上并随周切换
 - 作息可调：节次数量、起止时间、午休分割线；修改某节时长可自动顺延后续节次
+- 课程字号可在「课表设置 → 外观」中调整；课程名最多显示两行，超出后才省略
+- 课程颜色提供 20 种高区分度预设，每门课还可自定义色相或输入十六进制颜色
+- 设置开学日期后，每一天的表头会显示实际日期（如第一周周一 8/31）
 
 ### 课表导入
 - 应用内打开学校教务网页，用户自行登录并进入课表页，点击「导入」抓取
@@ -71,3 +75,23 @@
 - 设置、主页布局、壁纸映射、悬浮导航：SharedPreferences
 - GPA 课程与计入开关：SharedPreferences（openschedule_scores）
 - 壁纸图片：`filesDir/wallpaper_*.img`
+- 运行日志：`filesDir/logs/app.log`
+- 更新清单：[update.json](update.json)
+
+## 更新与反馈
+- 应用内更新：设置 →「检查更新」→ 显示是否有新版本 → 应用内下载 → SHA-256 校验 → 系统安装
+- 更新清单：<https://raw.githubusercontent.com/PanSomeone/OpeningSchool/main/update.json>
+- 问题反馈：<https://github.com/PanSomeone/OpeningSchool/issues>
+- 适配器目录：[market/catalog.json](market/catalog.json)；说明见 [docs/PLUGIN_MARKET.md](docs/PLUGIN_MARKET.md)
+- 版本与回滚记录：[docs/BACKUP.md](docs/BACKUP.md)
+
+## 开源许可
+
+当前仓库尚未添加正式的 `LICENSE` 文件。建议采用以下边界，正式发布前需要项目作者确认：
+
+- 应用主体（`app`、`core`、`feature`、内置插件）：**AGPL-3.0**，防止衍生版本闭源分发。
+- 外部适配器协议与示例（`core/plugin-api`、`docs/ADAPTER_API.md`）：**Apache-2.0**，允许第三方适配器保留自己的实现。
+- 名称、Logo、应用图标、赞助二维码、截图：**保留所有权利**，不随代码许可授权。
+- release 签名密钥、插件签名/审核、未来的云端服务：不公开或单独授权。
+
+完整分析、第三方依赖和源码保护建议见 [docs/LICENSING.md](docs/LICENSING.md)。如果确实要保留一部分核心源码，应明确采用 source-available / open-core，而不是声称整体开源；建议把市场服务端、签名校验等放入独立私有模块。

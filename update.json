@@ -1,9 +1,9 @@
 {
-  "version": "1.0.0-beta5",
-  "title": "开源大学 1.0.0-beta5",
-  "notes": "修复更新对话框在下载完成后缺少“重新检查”的问题。\n\n保留应用内检查、下载、SHA-256 校验与系统安装流程。",
-  "pageUrl": "https://github.com/PanSomeone/OpeningSchool/releases/tag/v1.0.0-beta5",
-  "apkUrl": "https://github.com/PanSomeone/OpeningSchool/releases/download/v1.0.0-beta5/OpeningSchool-1.0.0-beta5.apk",
-  "sha256": "b8a53b4bb6e722b16fe8bb412cede8b3acb7cadb97281c69f907f5e92e919b94",
-  "sizeBytes": 2612608
+  "version": "1.0.0-beta6",
+  "title": "开源大学 1.0.0-beta6",
+  "notes": "新增学期开学日期快捷设置与每日日期显示；课程字号可调；课程颜色扩展到 20 种并支持自定义色相/十六进制。\n\n应用内检查更新、下载、SHA-256 校验与系统安装继续可用。",
+  "pageUrl": "https://github.com/PanSomeone/OpeningSchool/releases/tag/v1.0.0-beta6",
+  "apkUrl": "https://github.com/PanSomeone/OpeningSchool/releases/download/v1.0.0-beta6/OpeningSchool-1.0.0-beta6.apk",
+  "sha256": "5b5c4e2d842e4417175e77bc7366abc51d81e52be926ab5142186391eacb1d69",
+  "sizeBytes": 2628992
 }

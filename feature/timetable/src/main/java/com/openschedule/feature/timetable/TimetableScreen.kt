@@ -24,6 +24,8 @@ import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Today
 import androidx.compose.material.icons.filled.UploadFile
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -32,6 +34,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -46,9 +49,13 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.openschedule.core.model.Course
+import com.openschedule.core.model.WeekMath
 import com.openschedule.core.ui.EmptyState
 import com.openschedule.core.ui.LocalFloatingNavSpace
 import com.openschedule.core.ui.WebCaptureDialog
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneOffset
 
 private data class WebTarget(val name: String, val url: String)
 
@@ -108,8 +115,11 @@ fun TimetableScreen(viewModel: TimetableViewModel) {
             WeekStrip(
                 week = week,
                 totalWeeks = timetable.totalWeeks,
+                semesterStart = timetable.semesterStart,
+                weekStartDay = settings.weekStartDay,
                 onSelect = viewModel::setWeek,
                 onToday = viewModel::goToCurrentWeek,
+                onStartDateChange = viewModel::saveSemesterStart,
             )
 
             Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
@@ -289,10 +299,23 @@ private fun TimetableHeader(
 private fun WeekStrip(
     week: Int,
     totalWeeks: Int,
+    semesterStart: String,
+    weekStartDay: Int,
     onSelect: (Int) -> Unit,
     onToday: () -> Unit,
+    onStartDateChange: (String) -> Unit,
 ) {
     var pickerOpen by remember { mutableStateOf(false) }
+    var startPickerOpen by remember { mutableStateOf(false) }
+    val startDate = WeekMath.parseDate(semesterStart)
+    val rangeStart = startDate?.let { WeekMath.dateOfWeekDay(it, week, 1, weekStartDay) }
+    val rangeEnd = startDate?.let { WeekMath.dateOfWeekDay(it, week, 7, weekStartDay) }
+    val dateLabel = if (rangeStart != null && rangeEnd != null) {
+        "${rangeStart.monthValue}.${rangeStart.dayOfMonth} – " +
+            "${rangeEnd.monthValue}.${rangeEnd.dayOfMonth}"
+    } else {
+        "设置开学日期"
+    }
 
     Row(
         modifier = Modifier
@@ -339,9 +362,66 @@ private fun WeekStrip(
                 }
             }
         }
-        Box(modifier = Modifier.weight(1f))
+        Row(
+            modifier = Modifier
+                .weight(1f)
+                .clickable { startPickerOpen = true }
+                .padding(start = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(
+                Icons.Filled.CalendarMonth,
+                contentDescription = "设置开学日期",
+                tint = if (startDate == null) {
+                    MaterialTheme.colorScheme.primary
+                } else {
+                    MaterialTheme.colorScheme.onSurfaceVariant
+                },
+                modifier = Modifier.size(14.dp),
+            )
+            Text(
+                text = dateLabel,
+                style = MaterialTheme.typography.labelSmall,
+                color = if (startDate == null) {
+                    MaterialTheme.colorScheme.primary
+                } else {
+                    MaterialTheme.colorScheme.onSurfaceVariant
+                },
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.padding(start = 4.dp),
+            )
+        }
         IconButton(onClick = onToday) {
             Icon(Icons.Filled.Today, contentDescription = "回到本周")
+        }
+    }
+
+    if (startPickerOpen) {
+        val initial = startDate
+            ?.atStartOfDay(ZoneOffset.UTC)
+            ?.toInstant()
+            ?.toEpochMilli()
+            ?: LocalDate.now().atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
+        val pickerState = rememberDatePickerState(initialSelectedDateMillis = initial)
+        DatePickerDialog(
+            onDismissRequest = { startPickerOpen = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    pickerState.selectedDateMillis?.let { millis ->
+                        val date = Instant.ofEpochMilli(millis)
+                            .atZone(ZoneOffset.UTC)
+                            .toLocalDate()
+                        onStartDateChange(date.toString())
+                    }
+                    startPickerOpen = false
+                }) { Text("确定") }
+            },
+            dismissButton = {
+                TextButton(onClick = { startPickerOpen = false }) { Text("取消") }
+            },
+        ) {
+            DatePicker(state = pickerState)
         }
     }
 

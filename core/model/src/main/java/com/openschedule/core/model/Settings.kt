@@ -39,10 +39,14 @@ data class AppSettings(
     val appWallpaper: String? = null,
     /** Page id -> file name in filesDir; overrides [appWallpaper] for that page. */
     val pageWallpapers: Map<String, String> = emptyMap(),
+    /** Scale applied to course card text in the timetable grid. */
+    val courseTextScale: Float = 1f,
 ) {
     companion object {
         const val MIN_CELL_HEIGHT = 44
         const val MAX_CELL_HEIGHT = 112
         const val MIN_NAV_OPACITY = 0.55f
+        const val MIN_COURSE_TEXT_SCALE = 0.75f
+        const val MAX_COURSE_TEXT_SCALE = 1.4f
     }
 }

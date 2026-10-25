@@ -39,6 +39,8 @@ data class Course(
     /** Empty means every week. */
     val weeks: Set<Int> = emptySet(),
     val color: Int = 0,
+    /** Optional 0xAARRGGBB color that overrides [color]. */
+    val customColor: Long? = null,
     val note: String = "",
     /** New multi-session source of truth; empty means [day]/[startPeriod]/[endPeriod]. */
     val slots: List<CourseSlot> = emptyList(),
@@ -110,7 +112,7 @@ fun uniqueTimetableName(base: String, existing: Collection<Timetable>): String {
     return "$trimmed $index"
 }
 
-const val COURSE_COLOR_COUNT = 10
+const val COURSE_COLOR_COUNT = 20
 
 fun normalizedColor(index: Int): Int =
     if (index in 0 until COURSE_COLOR_COUNT) index else 0

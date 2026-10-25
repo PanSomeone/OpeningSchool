@@ -62,16 +62,26 @@ private val DarkColors = darkColorScheme(
 )
 
 private val LightCourseColors = listOf(
-    CourseColors(Color(0xFFDCE7FF), Color(0xFF14306B)),
-    CourseColors(Color(0xFFD8F5E5), Color(0xFF0C4A31)),
-    CourseColors(Color(0xFFFFE6CC), Color(0xFF6B3A00)),
-    CourseColors(Color(0xFFFBDDE8), Color(0xFF6B2143)),
-    CourseColors(Color(0xFFE7DFFF), Color(0xFF3A2670)),
-    CourseColors(Color(0xFFD9F2F5), Color(0xFF0E4A52)),
-    CourseColors(Color(0xFFECEFCF), Color(0xFF444A0F)),
-    CourseColors(Color(0xFFFFE3D9), Color(0xFF662414)),
-    CourseColors(Color(0xFFE4E7EC), Color(0xFF2A2F37)),
-    CourseColors(Color(0xFFF1E2FF), Color(0xFF4B2A66)),
+    CourseColors(Color(0xFFDCE7FF), Color(0xFF14306B)), // blue
+    CourseColors(Color(0xFFD8F5E5), Color(0xFF0C4A31)), // green
+    CourseColors(Color(0xFFFFE6CC), Color(0xFF6B3A00)), // orange
+    CourseColors(Color(0xFFFBDDE8), Color(0xFF6B2143)), // pink
+    CourseColors(Color(0xFFE7DFFF), Color(0xFF3A2670)), // purple
+    CourseColors(Color(0xFFD9F2F5), Color(0xFF0E4A52)), // teal
+    CourseColors(Color(0xFFECEFCF), Color(0xFF444A0F)), // olive
+    CourseColors(Color(0xFFFFE3D9), Color(0xFF662414)), // coral
+    CourseColors(Color(0xFFE4E7EC), Color(0xFF2A2F37)), // slate
+    CourseColors(Color(0xFFF1E2FF), Color(0xFF4B2A66)), // violet
+    CourseColors(Color(0xFFDDE9FF), Color(0xFF123A66)), // indigo
+    CourseColors(Color(0xFFE2F5D7), Color(0xFF214A16)), // lime
+    CourseColors(Color(0xFFFFF2CC), Color(0xFF5C4300)), // amber
+    CourseColors(Color(0xFFFFDDE2), Color(0xFF6B1A24)), // rose
+    CourseColors(Color(0xFFD6F0FF), Color(0xFF0D3D56)), // sky
+    CourseColors(Color(0xFFD9F5EC), Color(0xFF0A463A)), // mint
+    CourseColors(Color(0xFFE8E1FF), Color(0xFF34245E)), // lavender
+    CourseColors(Color(0xFFFFE7D6), Color(0xFF663616)), // peach
+    CourseColors(Color(0xFFE3EBDD), Color(0xFF33432A)), // sage
+    CourseColors(Color(0xFFF8DDF5), Color(0xFF5E1C58)), // magenta
 )
 
 private val DarkCourseColors = listOf(
@@ -85,6 +95,16 @@ private val DarkCourseColors = listOf(
     CourseColors(Color(0xFF45281F), Color(0xFFFFD8C8)),
     CourseColors(Color(0xFF2A2F37), Color(0xFFE1E5EB)),
     CourseColors(Color(0xFF3B2A4B), Color(0xFFF0D9FF)),
+    CourseColors(Color(0xFF1C3158), Color(0xFFD3E2FF)),
+    CourseColors(Color(0xFF2C451B), Color(0xFFD9F5C2)),
+    CourseColors(Color(0xFF463B12), Color(0xFFFFE9A8)),
+    CourseColors(Color(0xFF4F2329), Color(0xFFFFD7DE)),
+    CourseColors(Color(0xFF123A54), Color(0xFFC9EEFF)),
+    CourseColors(Color(0xFF123E35), Color(0xFFC8F5E8)),
+    CourseColors(Color(0xFF30264F), Color(0xFFE3D8FF)),
+    CourseColors(Color(0xFF4B2F1D), Color(0xFFFFDDC2)),
+    CourseColors(Color(0xFF33412A), Color(0xFFE0EDD3)),
+    CourseColors(Color(0xFF4A2147), Color(0xFFF8D6F3)),
 )
 
 val LocalCourseColors = staticCompositionLocalOf { LightCourseColors }

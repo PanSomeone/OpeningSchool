@@ -59,7 +59,9 @@ object WeekMath {
         weekStartDay: Int,
     ): LocalDate? {
         if (semesterStart == null) return null
-        val firstDay = semesterStart.plusDays(((week - 1) * 7).toLong())
-        return firstDay.plusDays((column - 1).toLong())
+        val startIso = semesterStart.dayOfWeek.value
+        val leadingDays = Math.floorMod(startIso - weekStartDay, 7).toLong()
+        val firstVisibleDay = semesterStart.minusDays(leadingDays)
+        return firstVisibleDay.plusWeeks((week - 1).toLong()).plusDays((column - 1).toLong())
     }
 }

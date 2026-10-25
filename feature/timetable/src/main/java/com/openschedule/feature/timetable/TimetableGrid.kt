@@ -30,6 +30,7 @@ import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -71,6 +72,8 @@ fun TimetableGrid(
         .dp
     val periods = timetable.periods
     val gridHeight = cellHeight * periods.size
+    val courseTextScale = settings.courseTextScale
+        .coerceIn(AppSettings.MIN_COURSE_TEXT_SCALE, AppSettings.MAX_COURSE_TEXT_SCALE)
 
     val visibleDays = (1..7)
         .map { WeekMath.isoDayOf(it, settings.weekStartDay) }
@@ -116,6 +119,7 @@ fun TimetableGrid(
                                 occurrences = occurrences,
                                 periodCount = periods.size,
                                 cellHeight = cellHeight,
+                                textScale = courseTextScale,
                                 highlight = week == currentWeek && isoDay == today.dayOfWeek.value,
                                 onCourseClick = onCourseClick,
                                 onEmptyClick = onEmptyClick,
@@ -238,6 +242,7 @@ private fun DayColumn(
     occurrences: List<CourseOccurrence>,
     periodCount: Int,
     cellHeight: androidx.compose.ui.unit.Dp,
+    textScale: Float,
     highlight: Boolean,
     onCourseClick: (Course) -> Unit,
     onEmptyClick: (day: Int, period: Int) -> Unit,
@@ -286,9 +291,12 @@ private fun DayColumn(
             val end = slot.endPeriod.coerceAtMost(periodCount)
             if (start > end) return@forEach
             val palette = colors[normalizedColor(course.color)]
+            val customColor = course.customColor?.let { Color(it.toInt()) }
             Surface(
-                color = palette.container,
-                contentColor = palette.onContainer,
+                color = customColor ?: palette.container,
+                contentColor = customColor?.let {
+                    if (it.luminance() > 0.5f) Color(0xFF14161A) else Color.White
+                } ?: palette.onContainer,
                 shape = RoundedCornerShape(8.dp),
                 modifier = Modifier
                     .fillMaxWidth()
@@ -307,8 +315,8 @@ private fun DayColumn(
                 Column(modifier = Modifier.padding(horizontal = 4.dp, vertical = 3.dp)) {
                     Text(
                         text = course.name,
-                        fontSize = 11.sp,
-                        lineHeight = 13.sp,
+                        fontSize = (11f * textScale).sp,
+                        lineHeight = (13f * textScale).sp,
                         fontWeight = FontWeight.Medium,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
@@ -316,8 +324,8 @@ private fun DayColumn(
                     if (course.location.isNotBlank()) {
                         Text(
                             text = course.location,
-                            fontSize = 9.sp,
-                            lineHeight = 11.sp,
+                            fontSize = (9f * textScale).sp,
+                            lineHeight = (11f * textScale).sp,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
                             modifier = Modifier.padding(top = 2.dp),

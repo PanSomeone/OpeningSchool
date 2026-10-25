@@ -68,6 +68,7 @@ import kotlinx.coroutines.launch
 import java.io.File
 import java.time.Instant
 import java.time.LocalDate
+import kotlin.math.roundToInt
 import java.time.ZoneOffset
 import kotlin.math.roundToInt
 
@@ -303,6 +304,33 @@ fun TimetableSettingsScreen(
                                 viewModel.updateSettings { it.copy(cellHeight = sliderValue.roundToInt()) }
                             },
                             valueRange = AppSettings.MIN_CELL_HEIGHT.toFloat()..AppSettings.MAX_CELL_HEIGHT.toFloat(),
+                        )
+                    }
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                    val storedTextScale = settings.courseTextScale.coerceIn(
+                        AppSettings.MIN_COURSE_TEXT_SCALE,
+                        AppSettings.MAX_COURSE_TEXT_SCALE,
+                    )
+                    var textScaleValue by remember(storedTextScale) {
+                        mutableFloatStateOf(storedTextScale)
+                    }
+                    Column(modifier = Modifier.padding(vertical = 10.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text("课程字号", style = MaterialTheme.typography.bodyLarge)
+                            Spacer(Modifier.weight(1f))
+                            Text(
+                                text = "${(textScaleValue * 100).roundToInt()}%",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                        Slider(
+                            value = textScaleValue,
+                            onValueChange = { textScaleValue = it },
+                            onValueChangeFinished = {
+                                viewModel.updateSettings { it.copy(courseTextScale = textScaleValue) }
+                            },
+                            valueRange = AppSettings.MIN_COURSE_TEXT_SCALE..AppSettings.MAX_COURSE_TEXT_SCALE,
                         )
                     }
                 }

@@ -25,6 +25,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.ColorLens
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.AlertDialog
@@ -36,17 +37,22 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -57,6 +63,7 @@ import com.openschedule.core.model.Timetable
 import com.openschedule.core.model.WeekMath
 import com.openschedule.core.model.normalizedColor
 import com.openschedule.core.ui.LocalCourseColors
+import java.util.Locale
 import java.util.UUID
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
@@ -100,6 +107,8 @@ fun CourseEditorSheet(
         )
     }
     var color by remember { mutableStateOf(normalizedColor(initial?.color ?: 0)) }
+    var customColor by remember { mutableStateOf(initial?.customColor) }
+    var customColorOpen by remember { mutableStateOf(false) }
     var selectedWeeks by remember {
         mutableStateOf(
             initial?.weeks
@@ -307,25 +316,31 @@ fun CourseEditorSheet(
 
             FieldLabel("颜色")
             val palette = LocalCourseColors.current
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(9.dp),
+                verticalArrangement = Arrangement.spacedBy(9.dp),
+            ) {
                 palette.forEachIndexed { index, courseColors ->
                     Box(
                         modifier = Modifier
                             .size(32.dp)
                             .background(courseColors.container, CircleShape)
                             .border(
-                                width = if (color == index) 2.dp else 1.dp,
-                                color = if (color == index) {
+                                width = if (customColor == null && color == index) 2.dp else 1.dp,
+                                color = if (customColor == null && color == index) {
                                     MaterialTheme.colorScheme.primary
                                 } else {
                                     MaterialTheme.colorScheme.outlineVariant
                                 },
                                 shape = CircleShape,
                             )
-                            .clickable { color = index },
+                            .clickable {
+                                color = index
+                                customColor = null
+                            },
                         contentAlignment = Alignment.Center,
                     ) {
-                        if (color == index) {
+                        if (customColor == null && color == index) {
                             Icon(
                                 Icons.Filled.Check,
                                 contentDescription = null,
@@ -334,6 +349,35 @@ fun CourseEditorSheet(
                             )
                         }
                     }
+                }
+                val customPreview = customColor?.let { Color(it.toInt()) }
+                Box(
+                    modifier = Modifier
+                        .size(32.dp)
+                        .background(
+                            customPreview ?: MaterialTheme.colorScheme.surfaceVariant,
+                            CircleShape,
+                        )
+                        .border(
+                            width = if (customColor != null) 2.dp else 1.dp,
+                            color = if (customColor != null) {
+                                MaterialTheme.colorScheme.primary
+                            } else {
+                                MaterialTheme.colorScheme.outlineVariant
+                            },
+                            shape = CircleShape,
+                        )
+                        .clickable { customColorOpen = true },
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        Icons.Filled.ColorLens,
+                        contentDescription = "自定义颜色",
+                        tint = customPreview?.let {
+                            if (it.luminance() > 0.5f) Color(0xFF14161A) else Color.White
+                        } ?: MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(16.dp),
+                    )
                 }
             }
 
@@ -378,6 +422,7 @@ fun CourseEditorSheet(
                             slots = normalizedSlots,
                             weeks = if (selectedWeeks.size == totalWeeks) emptySet() else selectedWeeks,
                             color = color,
+                            customColor = customColor,
                         ),
                     )
                     onDismiss()
@@ -391,6 +436,14 @@ fun CourseEditorSheet(
             }
             Spacer(Modifier.height(8.dp))
         }
+    }
+
+    if (customColorOpen) {
+        CustomColorDialog(
+            initial = customColor,
+            onPick = { picked -> customColor = picked },
+            onDismiss = { customColorOpen = false },
+        )
     }
 
     if (confirmDelete && initial != null) {
@@ -412,6 +465,103 @@ fun CourseEditorSheet(
             },
         )
     }
+}
+
+@Composable
+private fun CustomColorDialog(
+    initial: Long?,
+    onPick: (Long) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    val initialColor = initial?.let { Color(it.toInt()) } ?: Color(0xFF3B82F6)
+    var hue by remember(initial) { mutableFloatStateOf(hsvHue(initialColor)) }
+    var hex by remember(initial) { mutableStateOf(formatHex(initialColor)) }
+    val preview = parseHexColor(hex) ?: initialColor
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("自定义颜色") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(52.dp)
+                        .background(preview, RoundedCornerShape(12.dp))
+                        .border(
+                            1.dp,
+                            MaterialTheme.colorScheme.outlineVariant,
+                            RoundedCornerShape(12.dp),
+                        ),
+                )
+                OutlinedTextField(
+                    value = hex,
+                    onValueChange = { input ->
+                        hex = input.uppercase().take(7)
+                    },
+                    label = { Text("十六进制") },
+                    placeholder = { Text("#RRGGBB") },
+                    singleLine = true,
+                    isError = parseHexColor(hex) == null,
+                    supportingText = if (parseHexColor(hex) == null) {
+                        { Text("请输入 #RRGGBB") }
+                    } else {
+                        null
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                Text(
+                    text = "色相",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Slider(
+                    value = hue,
+                    onValueChange = {
+                        hue = it
+                        hex = formatHex(
+                            Color(
+                                android.graphics.Color.HSVToColor(
+                                    floatArrayOf(it, 0.55f, 0.92f),
+                                ),
+                            ),
+                        )
+                    },
+                    valueRange = 0f..360f,
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    onPick(preview.toArgb().toLong() and 0xFFFFFFFFL)
+                    onDismiss()
+                },
+                enabled = parseHexColor(hex) != null,
+            ) { Text("使用") }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("取消") }
+        },
+    )
+}
+
+private fun hsvHue(color: Color): Float {
+    val hsv = FloatArray(3)
+    android.graphics.Color.colorToHSV(color.toArgb(), hsv)
+    return hsv[0]
+}
+
+private fun formatHex(color: Color): String =
+    String.format(Locale.US, "#%06X", color.toArgb() and 0xFFFFFF)
+
+private fun parseHexColor(raw: String): Color? {
+    val text = raw.trim().removePrefix("#")
+    if (text.length != 6 || !text.all { it.isDigit() || it.lowercaseChar() in 'a'..'f' }) {
+        return null
+    }
+    val value = text.toLongOrNull(16) ?: return null
+    return Color((0xFF000000L or value).toInt())
 }
 
 @Composable
