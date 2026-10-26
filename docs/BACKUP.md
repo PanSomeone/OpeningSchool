@@ -150,6 +150,14 @@ git show backup/pre-iteration-2026-10-25:path/to/file
 - 新增 [PLUGIN_DEVELOPMENT.md](PLUGIN_DEVELOPMENT.md)，README 顶部加入开发/审核/上架入口。
 - 旧外部 APK 适配器保留兼容，但目录和插件页不再推广 APK 插件。
 
+## 2026-10-26 beta18
+
+- 版本：`1.0.0-beta18`（versionCode 19）
+- SHA-256：`3d9cd034402e1fc6d2067eaee4bfe00e41f59d8cf9d3d71c0e0892b72edae58c`
+- 课表周次条右侧的开学日期改为高对比按钮：未设置时使用 primaryContainer 强调，设置后显示「X 月 X 日开学 / 本周日期范围」。
+- 插件页已安装插件整行可点按进入插件页面，并显示「点按进入」提示；设置/移除按钮保持独立。
+- AppShell 壁纸改为 LruCache（3 张）+ Crossfade（280ms），切换页面或页面壁纸时不再先清空再解码，减少闪烁；顶部渐变随壁纸一起淡入淡出。
+
 ## 当前验证记录
 
 - 全部单元测试通过（新增华农课表/成绩解析、版本比较回归测试）。

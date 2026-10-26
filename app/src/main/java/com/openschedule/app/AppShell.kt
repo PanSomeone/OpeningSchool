@@ -1,7 +1,10 @@
 package com.openschedule.app
 
+import android.content.Context
 import android.graphics.BitmapFactory
+import android.util.LruCache
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
@@ -37,7 +40,6 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -242,6 +244,11 @@ fun AppShell(graph: AppGraph) {
                     viewModel = viewModel,
                     settingsStore = graph.settingsStore,
                     moduleStore = graph.moduleStore,
+                    onOpenPlugin = { id ->
+                        selectedId = id
+                        pluginSettingsId = null
+                        wallpaperOpen = false
+                    },
                     onOpenPluginSettings = { pluginSettingsId = it },
                     onOpenSettings = {
                         selectedId = "settings"
@@ -353,23 +360,7 @@ fun AppShell(graph: AppGraph) {
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.background),
         ) {
-            if (wallpaperFile != null) {
-                WallpaperBackground(wallpaperFile)
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.TopCenter)
-                        .fillMaxWidth()
-                        .height(180.dp)
-                        .background(
-                            androidx.compose.ui.graphics.Brush.verticalGradient(
-                                colors = listOf(
-                                    MaterialTheme.colorScheme.background.copy(alpha = 0.78f),
-                                    Color.Transparent,
-                                ),
-                            ),
-                        ),
-                )
-            }
+            WallpaperBackground(wallpaperFile)
             CompositionLocalProvider(
                 LocalContentColor provides MaterialTheme.colorScheme.onBackground,
             ) {
@@ -459,6 +450,7 @@ private fun PluginsRoute(
     viewModel: PluginsViewModel,
     settingsStore: SettingsStore,
     moduleStore: PluginModuleStore,
+    onOpenPlugin: (String) -> Unit,
     onOpenPluginSettings: (String) -> Unit,
     onOpenSettings: () -> Unit,
 ) {
@@ -498,44 +490,89 @@ private fun PluginsRoute(
                 )
             }
         },
+        onOpenPlugin = onOpenPlugin,
         onOpenPluginSettings = onOpenPluginSettings,
         onOpenSettings = onOpenSettings,
     )
 }
 
 @Composable
-private fun WallpaperBackground(fileName: String) {
+private fun WallpaperBackground(fileName: String?) {
     val context = LocalContext.current
     val dark = LocalIsDarkTheme.current
-    val bitmap by produceState<ImageBitmap?>(initialValue = null, fileName) {
-        value = withContext(Dispatchers.IO) {
-            val file = File(context.filesDir, fileName)
-            if (!file.exists()) {
-                null
-            } else {
-                BitmapFactory.decodeFile(file.absolutePath)?.asImageBitmap()
+    var frame by remember { mutableStateOf<ImageBitmap?>(null) }
+
+    LaunchedEffect(fileName) {
+        if (fileName == null) {
+            frame = null
+        } else {
+            val loaded = withContext(Dispatchers.IO) {
+                WallpaperCache.load(context, fileName)
             }
+            if (loaded != null) frame = loaded
         }
     }
 
-    bitmap?.let { image ->
-        Image(
-            bitmap = image,
-            contentDescription = null,
-            contentScale = ContentScale.Crop,
-            modifier = Modifier.fillMaxSize(),
-        )
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    if (dark) {
-                        Color.Black.copy(alpha = 0.34f)
-                    } else {
-                        Color.White.copy(alpha = 0.18f)
-                    },
-                ),
-        )
+    Crossfade(
+        targetState = frame,
+        animationSpec = tween(durationMillis = 280),
+        label = "wallpaper",
+        modifier = Modifier.fillMaxSize(),
+    ) { image ->
+        if (image == null) {
+            Box(Modifier.fillMaxSize())
+        } else {
+            Box(Modifier.fillMaxSize()) {
+                Image(
+                    bitmap = image,
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize(),
+                )
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(
+                            if (dark) {
+                                Color.Black.copy(alpha = 0.34f)
+                            } else {
+                                Color.White.copy(alpha = 0.18f)
+                            },
+                        ),
+                )
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .fillMaxWidth()
+                        .height(180.dp)
+                        .background(
+                            androidx.compose.ui.graphics.Brush.verticalGradient(
+                                colors = listOf(
+                                    MaterialTheme.colorScheme.background.copy(alpha = 0.78f),
+                                    Color.Transparent,
+                                ),
+                            ),
+                        ),
+                )
+            }
+        }
+    }
+}
+
+private object WallpaperCache {
+    private val cache = object : LruCache<String, ImageBitmap>(3) {
+        override fun sizeOf(key: String, value: ImageBitmap): Int = 1
+    }
+
+    fun load(context: Context, fileName: String): ImageBitmap? {
+        cache.get(fileName)?.let { return it }
+        val file = File(context.filesDir, fileName)
+        if (!file.isFile) return null
+        val bitmap = BitmapFactory.decodeFile(file.absolutePath)
+            ?.asImageBitmap()
+            ?: return null
+        cache.put(fileName, bitmap)
+        return bitmap
     }
 }
 

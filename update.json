@@ -1,10 +1,10 @@
 {
-  "version": "1.0.0-beta17",
-  "title": "开源大学 1.0.0-beta17",
-  "notes": "本次更新：\n- 插件改为应用内 JS 模块：插件市场下载 .osplugin、校验 SHA-256 后直接启用，不再安装 APK\n- 网页导入模块会自动出现在「导入课表 → 从学校官网导入」列表\n- 新增插件开发、打包、审核与上架文档 docs/PLUGIN_DEVELOPMENT.md\n- 保留 Gitee 优先更新、壁纸与热水组件修复",
-  "pageUrl": "https://gitee.com/PanSomeone/OpeningSchool/releases/tag/v1.0.0-beta17",
-  "apkUrl": "https://gitee.com/PanSomeone/OpeningSchool/releases/download/v1.0.0-beta17/OpeningSchool-1.0.0-beta17.apk",
-  "fallbackApkUrl": "https://github.com/PanSomeone/OpeningSchool/releases/download/v1.0.0-beta17/OpeningSchool-1.0.0-beta17.apk",
-  "sha256": "04d7e572e5939ea97349d3b2111518f1302324fc3237a87d4a3e81d924307178",
+  "version": "1.0.0-beta18",
+  "title": "开源大学 1.0.0-beta18",
+  "notes": "本次更新：\n- 课表页的开学日期改为醒目按钮，直接显示开学日期和本周范围\n- 插件页的已安装插件支持点按直接进入对应页面\n- 壁纸增加内存缓存与 280ms 淡入淡出，切换页面时减少闪烁和重复解码\n- 保留应用内 JS 插件模块与 Gitee 优先更新",
+  "pageUrl": "https://gitee.com/PanSomeone/OpeningSchool/releases/tag/v1.0.0-beta18",
+  "apkUrl": "https://gitee.com/PanSomeone/OpeningSchool/releases/download/v1.0.0-beta18/OpeningSchool-1.0.0-beta18.apk",
+  "fallbackApkUrl": "https://github.com/PanSomeone/OpeningSchool/releases/download/v1.0.0-beta18/OpeningSchool-1.0.0-beta18.apk",
+  "sha256": "3d9cd034402e1fc6d2067eaee4bfe00e41f59d8cf9d3d71c0e0892b72edae58c",
   "sizeBytes": 3263189
 }

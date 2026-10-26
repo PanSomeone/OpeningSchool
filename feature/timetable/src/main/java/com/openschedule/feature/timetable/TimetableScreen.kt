@@ -419,11 +419,11 @@ private fun WeekStrip(
     val startDate = WeekMath.parseDate(semesterStart)
     val rangeStart = startDate?.let { WeekMath.dateOfWeekDay(it, week, 1, weekStartDay) }
     val rangeEnd = startDate?.let { WeekMath.dateOfWeekDay(it, week, 7, weekStartDay) }
-    val dateLabel = if (rangeStart != null && rangeEnd != null) {
+    val rangeLabel = if (rangeStart != null && rangeEnd != null) {
         "${rangeStart.monthValue}.${rangeStart.dayOfMonth} – " +
             "${rangeEnd.monthValue}.${rangeEnd.dayOfMonth}"
     } else {
-        "设置开学日期"
+        ""
     }
 
     Row(
@@ -474,35 +474,75 @@ private fun WeekStrip(
                 }
             }
         }
-        Row(
+        Surface(
+            shape = RoundedCornerShape(22.dp),
+            color = if (startDate == null) {
+                MaterialTheme.colorScheme.primaryContainer
+            } else {
+                MaterialTheme.colorScheme.surface
+            },
+            tonalElevation = if (startDate == null) 0.dp else 1.dp,
             modifier = Modifier
                 .weight(1f)
-                .clickable { startPickerOpen = true }
-                .padding(start = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
+                .padding(start = 8.dp)
+                .clickable { startPickerOpen = true },
         ) {
-            Icon(
-                Icons.Filled.CalendarMonth,
-                contentDescription = "设置开学日期",
-                tint = if (startDate == null) {
-                    MaterialTheme.colorScheme.primary
-                } else {
-                    MaterialTheme.colorScheme.onSurfaceVariant
-                },
-                modifier = Modifier.size(14.dp),
-            )
-            Text(
-                text = dateLabel,
-                style = MaterialTheme.typography.labelSmall,
-                color = if (startDate == null) {
-                    MaterialTheme.colorScheme.primary
-                } else {
-                    MaterialTheme.colorScheme.onSurfaceVariant
-                },
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.padding(start = 4.dp),
-            )
+            Row(
+                modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(
+                    Icons.Filled.CalendarMonth,
+                    contentDescription = "设置开学日期",
+                    tint = if (startDate == null) {
+                        MaterialTheme.colorScheme.onPrimaryContainer
+                    } else {
+                        MaterialTheme.colorScheme.primary
+                    },
+                    modifier = Modifier.size(18.dp),
+                )
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(start = 8.dp),
+                ) {
+                    Text(
+                        text = startDate?.let {
+                            "${it.monthValue} 月 ${it.dayOfMonth} 日开学"
+                        } ?: "设置开学日期",
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.SemiBold,
+                        color = if (startDate == null) {
+                            MaterialTheme.colorScheme.onPrimaryContainer
+                        } else {
+                            MaterialTheme.colorScheme.onSurface
+                        },
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    Text(
+                        text = rangeLabel.takeIf { it.isNotBlank() }
+                            ?.let { "本周 $it" }
+                            ?: "设置后才能显示实际日期",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = if (startDate == null) {
+                            MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.78f)
+                        } else {
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                        },
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+                if (startDate == null) {
+                    Icon(
+                        Icons.Filled.ChevronRight,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                        modifier = Modifier.size(18.dp),
+                    )
+                }
+            }
         }
     }
 

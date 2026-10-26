@@ -90,6 +90,7 @@ fun PluginsScreen(
     moduleStore: PluginModuleStore,
     onInstall: (String) -> Unit,
     onUninstall: (String) -> Unit,
+    onOpenPlugin: (String) -> Unit,
     onOpenPluginSettings: (String) -> Unit,
     onOpenSettings: () -> Unit,
 ) {
@@ -157,6 +158,7 @@ fun PluginsScreen(
                         installed.forEachIndexed { index, plugin ->
                             PluginInstalledRow(
                                 plugin = plugin,
+                                onOpen = { onOpenPlugin(plugin.id) },
                                 onSettings = { onOpenPluginSettings(plugin.id) },
                                 onRemove = { uninstalling = plugin },
                             )
@@ -235,12 +237,14 @@ private fun MarketButton(onClick: () -> Unit) {
 @Composable
 private fun PluginInstalledRow(
     plugin: BuiltInPluginUi,
+    onOpen: () -> Unit,
     onSettings: () -> Unit,
     onRemove: () -> Unit,
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .clickable(onClick = onOpen)
             .padding(vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -261,6 +265,12 @@ private fun PluginInstalledRow(
                 text = plugin.description,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Text(
+                text = "点按进入",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(top = 2.dp),
             )
         }
         if (plugin.hasSettings) {
