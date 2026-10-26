@@ -1,5 +1,7 @@
 package com.openschedule.feature.home
 
+import androidx.compose.animation.core.animateOffsetAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -344,43 +346,11 @@ fun HomeScreen(
                     onRequestFolderConfig = { folderConfigId = it },
                     onOpenFolder = { openFolderId = it },
                     onMove = { id, row, col ->
-                        val widget = safeLayout.widgets.firstOrNull { it.id == id }
-                        if (widget != null) {
-                            val targetCells = rectangleCells(
-                                row,
-                                col,
-                                widget.colSpan,
-                                widget.rowSpan,
-                            )
-                            val occupied = safeLayout.widgets.filter { other ->
-                                other.id != id && other.cells().any { it in targetCells }
-                            }
-                            when {
-                                occupied.isEmpty() -> {
-                                    updateWidget(widget.copy(row = row, col = col))
-                                }
-
-                                occupied.size == 1 -> {
-                                    val other = occupied.single()
-                                    val exactMatch = other.colSpan == widget.colSpan &&
-                                        other.rowSpan == widget.rowSpan &&
-                                        other.cells().toSet() == targetCells
-                                    if (exactMatch) {
-                                        val swapped = safeLayout.widgets.map { item ->
-                                            when (item.id) {
-                                                id -> item.copy(row = row, col = col)
-                                                other.id -> item.copy(row = widget.row, col = widget.col)
-                                                else -> item
-                                            }
-                                        }
-                                        persist(safeLayout.copy(widgets = swapped))
-                                    } else {
-                                        showMessage("目标位置放不下")
-                                    }
-                                }
-
-                                else -> showMessage("目标位置放不下")
-                            }
+                        val moved = movedWidgets(safeLayout.widgets, id, row, col)
+                        if (moved == null) {
+                            showMessage("目标位置放不下")
+                        } else {
+                            persist(safeLayout.copy(widgets = moved))
                         }
                     },
                     onRemove = { id ->
@@ -560,6 +530,21 @@ private fun HomeCanvas(
                 val w = cellWidth * widget.colSpan + gap * (widget.colSpan - 1)
                 val h = cellHeight * widget.rowSpan + gap * (widget.rowSpan - 1)
                 val dragging = dragId == widget.id
+                val targetCell = dragTarget
+                val snapTarget = if (dragging && targetCell != null) {
+                    Offset(
+                        x = (targetCell.second - widget.col) * stepX,
+                        y = (targetCell.first - widget.row) * stepY,
+                    )
+                } else {
+                    Offset.Zero
+                }
+                val animatedSnap by animateOffsetAsState(
+                    targetValue = snapTarget,
+                    animationSpec = tween(durationMillis = 110),
+                    label = "widgetDragSnap",
+                )
+                val dragTranslation = if (dragging) animatedSnap else Offset.Zero
                 Box(
                     modifier = Modifier
                         .offset(x = x, y = y)
@@ -567,11 +552,8 @@ private fun HomeCanvas(
                         .height(h)
                         .zIndex(if (dragging) 1f else 0f)
                         .graphicsLayer {
-                            translationX = if (dragging) dragOffset.x else 0f
-                            translationY = if (dragging) dragOffset.y else 0f
-                            val scale = if (dragging) 1.03f else 1f
-                            scaleX = scale
-                            scaleY = scale
+                            translationX = dragTranslation.x
+                            translationY = dragTranslation.y
                         },
                 ) {
                     if (available) {
@@ -585,7 +567,7 @@ private fun HomeCanvas(
                             tonalElevation = if (widget.type == "weather") 0.dp else 1.dp,
                             modifier = Modifier
                                 .fillMaxSize()
-                                .alpha(if (dragging) 0.35f else 1f),
+                                .alpha(if (dragging) 0.9f else 1f),
                         ) {
                             val fontScale = when {
                                 widget.colSpan == 2 && widget.rowSpan == 2 -> 1.10f
@@ -781,8 +763,6 @@ private fun HomeCanvas(
                     draggingId,
                     target.first,
                     target.second,
-                    dragSize.columns,
-                    dragSize.rows,
                 )
                 Box(
                     modifier = Modifier
@@ -1704,25 +1684,46 @@ private fun rectangleCells(
     return cells
 }
 
-/** Empty target is fine; a widget of exactly the same rectangle can be swapped. */
+/** Empty target is fine; a single overlapping widget can swap if both fit. */
 private fun canDrop(
     widgets: List<HomeWidgetPlacement>,
     id: String,
     row: Int,
     col: Int,
-    colSpan: Int,
-    rowSpan: Int,
-): Boolean {
-    val target = rectangleCells(row, col, colSpan, rowSpan)
-    val occupied = widgets.filter { widget ->
-        widget.id != id && widget.cells().any { it in target }
+): Boolean = movedWidgets(widgets, id, row, col) != null
+
+private fun movedWidgets(
+    widgets: List<HomeWidgetPlacement>,
+    id: String,
+    row: Int,
+    col: Int,
+): List<HomeWidgetPlacement>? {
+    val widget = widgets.firstOrNull { it.id == id } ?: return null
+    val target = rectangleCells(row, col, widget.colSpan, widget.rowSpan)
+    val occupied = widgets.filter { other ->
+        other.id != id && other.cells().any { it in target }
     }
-    if (occupied.isEmpty()) return true
-    if (occupied.size != 1) return false
-    val other = occupied.single()
-    return other.colSpan == colSpan &&
-        other.rowSpan == rowSpan &&
-        other.cells().toSet() == target
+    if (occupied.size > 1) return null
+    val next = if (occupied.isEmpty()) {
+        widgets.map { item ->
+            if (item.id == id) item.copy(row = row, col = col) else item
+        }
+    } else {
+        val other = occupied.single()
+        widgets.map { item ->
+            when (item.id) {
+                id -> item.copy(row = row, col = col)
+                other.id -> item.copy(row = widget.row, col = widget.col)
+                else -> item
+            }
+        }
+    }
+    val valid = next.all { a ->
+        next.none { b ->
+            b.id != a.id && a.cells().any { it in b.cells() }
+        }
+    }
+    return next.takeIf { valid }
 }
 
 private fun placeWithSize(

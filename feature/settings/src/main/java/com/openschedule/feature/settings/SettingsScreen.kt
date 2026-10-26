@@ -80,8 +80,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.openschedule.core.data.AnnouncementStore
@@ -106,6 +104,7 @@ fun SettingsScreen(
     viewModel: SettingsViewModel,
     hiddenPluginIds: Set<String> = emptySet(),
     announcementStore: AnnouncementStore,
+    updateViewModel: UpdateViewModel,
 ) {
     val settings by viewModel.settings.collectAsStateWithLifecycle()
     val message by viewModel.message.collectAsStateWithLifecycle()
@@ -128,16 +127,6 @@ fun SettingsScreen(
     var showSponsor by remember { mutableStateOf(false) }
     var showUpdate by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
-    val updateViewModel: UpdateViewModel = viewModel(
-        factory = remember(context) {
-            object : ViewModelProvider.Factory {
-                @Suppress("UNCHECKED_CAST")
-                override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                    return UpdateViewModel(context.applicationContext) as T
-                }
-            }
-        },
-    )
     val updateState by updateViewModel.state.collectAsStateWithLifecycle()
     val wallpaperStatus = when {
         settings.pageWallpapers.isNotEmpty() && settings.appWallpaper != null ->
@@ -549,6 +538,10 @@ fun SettingsScreen(
                 }
             },
             onOpenRelease = updateViewModel::openReleasePage,
+            onIgnore = {
+                updateViewModel.ignoreCurrentUpdate()
+                showUpdate = false
+            },
             onDismiss = { showUpdate = false },
         )
     }
@@ -651,6 +644,7 @@ private fun UpdateSheet(
     onDownload: () -> Unit,
     onInstall: () -> Unit,
     onOpenRelease: () -> Unit,
+    onIgnore: () -> Unit,
     onDismiss: () -> Unit,
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -730,6 +724,12 @@ private fun UpdateSheet(
                     Button(onClick = onDownload, modifier = Modifier.fillMaxWidth()) {
                         Text("下载更新")
                     }
+                    TextButton(onClick = onIgnore) { Text("忽略更新（48 小时）") }
+                    Text(
+                        text = "忽略后设置图标上的红点会隐藏 48 小时；出现更新的版本仍会提示。",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
                     TextButton(onClick = onCheck) { Text("重新检查") }
                     TextButton(onClick = onOpenRelease) { Text("在浏览器查看") }
                 }
@@ -847,7 +847,7 @@ private fun appVersionName(context: Context): String = runCatching {
         context.packageManager.getPackageInfo(context.packageName, 0)
     }
     info.versionName
-}.getOrNull().orEmpty().ifBlank { "1.0.0-beta18" }
+}.getOrNull().orEmpty().ifBlank { "1.0.0-beta19" }
 
 private const val AUTHOR = "PanSomeone"
 

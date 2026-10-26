@@ -13,6 +13,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -28,6 +29,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
@@ -78,6 +80,8 @@ import com.openschedule.feature.plugins.PluginsViewModel
 import com.openschedule.feature.settings.AnnouncementDialog
 import com.openschedule.feature.settings.SettingsScreen
 import com.openschedule.feature.settings.SettingsViewModel
+import com.openschedule.feature.settings.UpdateState
+import com.openschedule.feature.settings.UpdateViewModel
 import com.openschedule.feature.settings.WallpaperSettingsScreen
 import com.openschedule.feature.timetable.TimetableScreen
 import com.openschedule.feature.timetable.TimetableSettingsScreen
@@ -99,9 +103,22 @@ fun AppShell(graph: AppGraph) {
     val announcementReadIds by graph.announcementStore.readIds.collectAsStateWithLifecycle()
     val unreadAnnouncements = announcements.count { it.id !in announcementReadIds }
     var announcementToShow by remember { mutableStateOf<Announcement?>(null) }
+    val context = LocalContext.current
+
+    val updateViewModel = rememberedViewModel(UpdateViewModel::class.java, "update") {
+        UpdateViewModel(context.applicationContext)
+    }
+    val updateState by updateViewModel.state.collectAsStateWithLifecycle()
+    val ignoredVersion by updateViewModel.ignoredVersion.collectAsStateWithLifecycle()
+    val ignoredUntil by updateViewModel.ignoredUntil.collectAsStateWithLifecycle()
+    val availableUpdate = (updateState as? UpdateState.Available)?.info
+    val showUpdateDot = availableUpdate != null &&
+        (availableUpdate.version != ignoredVersion ||
+            System.currentTimeMillis() >= ignoredUntil)
 
     LaunchedEffect(Unit) {
         graph.announcementStore.refresh()
+        updateViewModel.autoCheck()
     }
 
     val homeViewModel = rememberedViewModel(HomeViewModel::class.java, "home") {
@@ -270,6 +287,7 @@ fun AppShell(graph: AppGraph) {
                     viewModel = viewModel,
                     hiddenPluginIds = settings.disabledPlugins,
                     announcementStore = graph.announcementStore,
+                    updateViewModel = updateViewModel,
                 )
             },
         ),
@@ -342,7 +360,6 @@ fun AppShell(graph: AppGraph) {
         wallpaperOpen = false
     }
 
-    val context = LocalContext.current
     val wallpaperFile = remember(active.id, settings.appWallpaper, settings.pageWallpapers, context) {
         val pageWallpaper = settings.pageWallpapers[active.id]
         val appWallpaper = settings.appWallpaper
@@ -420,6 +437,7 @@ fun AppShell(graph: AppGraph) {
                 destinations = destinations,
                 activeId = active.id,
                 opacity = settings.navOpacity,
+                badgedIds = if (showUpdateDot) setOf("settings") else emptySet(),
                 onSelect = { id ->
                     selectedId = id
                     pluginSettingsId = null
@@ -582,6 +600,7 @@ private fun FloatingNav(
     destinations: List<PluginDestination>,
     activeId: String,
     opacity: Float,
+    badgedIds: Set<String> = emptySet(),
     onSelect: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -661,14 +680,36 @@ private fun FloatingNav(
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.Center,
                         ) {
-                            Icon(
-                                imageVector = NavIcons.icon(
-                                    slot.iconKey.ifBlank { destination.iconKey },
-                                ),
-                                contentDescription = slot.label.ifBlank { destination.label },
-                                tint = contentColor,
-                                modifier = Modifier.size(22.dp),
-                            )
+                            Box {
+                                Icon(
+                                    imageVector = NavIcons.icon(
+                                        slot.iconKey.ifBlank { destination.iconKey },
+                                    ),
+                                    contentDescription = buildString {
+                                        append(slot.label.ifBlank { destination.label })
+                                        if (slot.id in badgedIds) append("，有可用更新")
+                                    },
+                                    tint = contentColor,
+                                    modifier = Modifier.size(22.dp),
+                                )
+                                if (slot.id in badgedIds) {
+                                    Box(
+                                        modifier = Modifier
+                                            .align(Alignment.TopEnd)
+                                            .offset(x = 3.dp, y = (-2).dp)
+                                            .size(7.dp)
+                                            .background(
+                                                MaterialTheme.colorScheme.error,
+                                                CircleShape,
+                                            )
+                                            .border(
+                                                1.dp,
+                                                MaterialTheme.colorScheme.surface,
+                                                CircleShape,
+                                            ),
+                                    )
+                                }
+                            }
                             Spacer(Modifier.height(2.dp))
                             Text(
                                 text = slot.label.ifBlank { destination.label },

@@ -53,11 +53,33 @@ class UpdateViewModel(
 ) : ViewModel() {
 
     val currentVersion: String = appVersionName(context)
+    private val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 
     private val _state = MutableStateFlow<UpdateState>(UpdateState.Idle)
     val state: StateFlow<UpdateState> = _state.asStateFlow()
 
+    private val _ignoredVersion = MutableStateFlow(prefs.getString(KEY_IGNORED_VERSION, null))
+    val ignoredVersion: StateFlow<String?> = _ignoredVersion.asStateFlow()
+
+    private val _ignoredUntil = MutableStateFlow(prefs.getLong(KEY_IGNORED_UNTIL, 0L))
+    val ignoredUntil: StateFlow<Long> = _ignoredUntil.asStateFlow()
+
     private var job: Job? = null
+
+    fun autoCheck() {
+        if (_state.value is UpdateState.Idle) check()
+    }
+
+    fun ignoreCurrentUpdate() {
+        val info = (_state.value as? UpdateState.Available)?.info ?: return
+        val until = System.currentTimeMillis() + IGNORE_MILLIS
+        prefs.edit()
+            .putString(KEY_IGNORED_VERSION, info.version)
+            .putLong(KEY_IGNORED_UNTIL, until)
+            .apply()
+        _ignoredVersion.value = info.version
+        _ignoredUntil.value = until
+    }
 
     fun check() {
         if (_state.value is UpdateState.Downloading) return
@@ -270,9 +292,13 @@ class UpdateViewModel(
 
     private fun appVersionName(context: Context): String = runCatching {
         context.packageManager.getPackageInfo(context.packageName, 0).versionName
-    }.getOrNull().orEmpty().ifBlank { "1.0.0-beta18" }
+    }.getOrNull().orEmpty().ifBlank { "1.0.0-beta19" }
 
     private companion object {
+        const val PREFS_NAME = "openschedule_update"
+        const val KEY_IGNORED_VERSION = "ignored_version"
+        const val KEY_IGNORED_UNTIL = "ignored_until"
+        const val IGNORE_MILLIS = 48L * 60 * 60 * 1000
         const val RELEASES_PAGE = "https://gitee.com/PanSomeone/OpeningSchool/releases"
         val MANIFEST_URLS = listOf(
             "https://gitee.com/PanSomeone/OpeningSchool/raw/main/update.json",
