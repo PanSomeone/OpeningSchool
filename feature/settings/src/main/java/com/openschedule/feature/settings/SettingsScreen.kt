@@ -664,7 +664,7 @@ private fun UpdateSheet(
             Text("软件更新", style = MaterialTheme.typography.titleLarge)
             when (state) {
                 UpdateState.Idle -> {
-                    Text("检查是否有新的测试版", style = MaterialTheme.typography.bodyMedium)
+                    Text("检查是否有新版本", style = MaterialTheme.typography.bodyMedium)
                     Button(onClick = onCheck, modifier = Modifier.fillMaxWidth()) {
                         Text("检查更新")
                     }
@@ -847,7 +847,7 @@ private fun appVersionName(context: Context): String = runCatching {
         context.packageManager.getPackageInfo(context.packageName, 0)
     }
     info.versionName
-}.getOrNull().orEmpty().ifBlank { "1.0.0-beta19" }
+}.getOrNull().orEmpty().ifBlank { "1.0.0" }
 
 private const val AUTHOR = "PanSomeone"
 

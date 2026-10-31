@@ -292,7 +292,7 @@ class UpdateViewModel(
 
     private fun appVersionName(context: Context): String = runCatching {
         context.packageManager.getPackageInfo(context.packageName, 0).versionName
-    }.getOrNull().orEmpty().ifBlank { "1.0.0-beta19" }
+    }.getOrNull().orEmpty().ifBlank { "1.0.0" }
 
     private companion object {
         const val PREFS_NAME = "openschedule_update"

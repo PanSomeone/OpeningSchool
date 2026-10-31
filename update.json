@@ -1,10 +1,10 @@
 {
-  "version": "1.0.0-beta19",
-  "title": "开源大学 1.0.0-beta19",
-  "notes": "本次更新：\n- 主页组件拖动改为按格吸附：拖动起点保持原位，落点与预览一致，并支持不同尺寸组件交换\n- 启动时自动检查更新；有更新时设置导航显示小红点\n- 更新页新增「忽略更新（48 小时）」，同一版本 48 小时内不再提醒\n- 保留开学日期强调、插件点按进入与壁纸淡入淡出",
-  "pageUrl": "https://gitee.com/PanSomeone/OpeningSchool/releases/tag/v1.0.0-beta19",
-  "apkUrl": "https://gitee.com/PanSomeone/OpeningSchool/releases/download/v1.0.0-beta19/OpeningSchool-1.0.0-beta19.apk",
-  "fallbackApkUrl": "https://github.com/PanSomeone/OpeningSchool/releases/download/v1.0.0-beta19/OpeningSchool-1.0.0-beta19.apk",
-  "sha256": "4ee176a84c465a49efdc6c003b737e1d94bca143af99c51778998a69aecb1d13",
-  "sizeBytes": 3263189
+  "version": "1.0.0",
+  "title": "开源大学 1.0.0",
+  "notes": "1.0 正式版发布：\n- 今日课程只显示今天还没结束的课程，已上过的自动隐藏；全部结束后显示「今天的课已结束」\n- 应用内 JS 插件模块：插件市场不再安装 APK\n- 启动自动检查更新，设置导航红点；可忽略更新 48 小时\n- 课表开学日期强调、插件点按进入、壁纸裁切与淡入淡出\n- 热水组件适配小尺寸，主页组件拖动吸附与不同尺寸交换\n- Gitee 优先更新，GitHub 备用下载",
+  "pageUrl": "https://gitee.com/PanSomeone/OpeningSchool/releases/tag/v1.0.0",
+  "apkUrl": "https://gitee.com/PanSomeone/OpeningSchool/releases/download/v1.0.0/OpeningSchool-1.0.0.apk",
+  "fallbackApkUrl": "https://github.com/PanSomeone/OpeningSchool/releases/download/v1.0.0/OpeningSchool-1.0.0.apk",
+  "sha256": "bf3f1c027846a2b4220ac49e98736dad010cb819dc3949e491b7fbd165fc1e1c",
+  "sizeBytes": 3263433
 }

@@ -2,7 +2,7 @@
 
 > 插件开发、打包、审核与上架：[docs/PLUGIN_DEVELOPMENT.md](docs/PLUGIN_DEVELOPMENT.md)
 
-> 当前测试版：`1.0.0-beta19`（versionCode 20） · [下载与更新](https://gitee.com/PanSomeone/OpeningSchool/releases)
+> 当前正式版：`1.0.0`（versionCode 21） · [下载与更新](https://gitee.com/PanSomeone/OpeningSchool/releases)
 
 功能说明
 

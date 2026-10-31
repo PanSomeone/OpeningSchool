@@ -87,8 +87,10 @@ import com.openschedule.core.ui.LocalCourseColors
 import com.openschedule.core.ui.LocalFloatingNavSpace
 import com.openschedule.core.ui.NavIcons
 import com.openschedule.core.ui.ScreenHeader
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.time.LocalDate
+import java.time.LocalTime
 import java.util.UUID
 import kotlin.math.roundToInt
 
@@ -151,12 +153,19 @@ fun HomeScreen(
 
     val safeLayout = remember(layout) { sanitizeLayout(layout) }
     val today = LocalDate.now()
+    var now by remember { mutableStateOf(LocalTime.now()) }
+    LaunchedEffect(Unit) {
+        while (true) {
+            now = LocalTime.now()
+            delay(30_000)
+        }
+    }
     val week = WeekMath.currentWeek(
         today = today,
         semesterStart = WeekMath.parseDate(timetable.semesterStart),
         totalWeeks = timetable.totalWeeks,
     )
-    val todayCourses = if (timetableEnabled) {
+    val allTodayCourses = if (timetableEnabled) {
         timetable.courses
             .flatMap { course ->
                 course.slotsOn(today.dayOfWeek.value, week).map { slot ->
@@ -167,6 +176,12 @@ fun HomeScreen(
     } else {
         emptyList()
     }
+    val todayCourses = allTodayCourses.filter { occurrence ->
+        val end = timetable.period(occurrence.slot.endPeriod)?.end
+        val endTime = end?.let { runCatching { LocalTime.parse(it) }.getOrNull() }
+        endTime == null || endTime.isAfter(now)
+    }
+    val todayFinished = allTodayCourses.isNotEmpty() && todayCourses.isEmpty()
 
     var editMode by remember { mutableStateOf(false) }
     var showWeather by remember { mutableStateOf(false) }
@@ -334,6 +349,7 @@ fun HomeScreen(
                     timetable = timetable,
                     timetableEnabled = timetableEnabled,
                     todayCourses = todayCourses,
+                    todayFinished = todayFinished,
                     weather = weather,
                     loadingWeather = loadingWeather,
                     onOpen = onOpen,
@@ -465,6 +481,7 @@ private fun HomeCanvas(
     timetable: Timetable,
     timetableEnabled: Boolean,
     todayCourses: List<TodayCourse>,
+    todayFinished: Boolean,
     weather: WeatherUi?,
     loadingWeather: Boolean,
     onOpen: (String) -> Unit,
@@ -591,6 +608,7 @@ private fun HomeCanvas(
                                     timetable = timetable,
                                     timetableEnabled = timetableEnabled,
                                     todayCourses = todayCourses,
+                                    todayFinished = todayFinished,
                                     weather = weather,
                                     loadingWeather = loadingWeather,
                                     onOpen = onOpen,
@@ -796,6 +814,7 @@ private fun WidgetContent(
     timetable: Timetable,
     timetableEnabled: Boolean,
     todayCourses: List<TodayCourse>,
+    todayFinished: Boolean,
     weather: WeatherUi?,
     loadingWeather: Boolean,
     onOpen: (String) -> Unit,
@@ -816,6 +835,7 @@ private fun WidgetContent(
             timetable = timetable,
             timetableEnabled = timetableEnabled,
             courses = todayCourses,
+            finished = todayFinished,
             colSpan = widget.colSpan,
             rowSpan = widget.rowSpan,
             onClick = { onOpen(if (timetableEnabled) "timetable" else "plugins") },
@@ -960,6 +980,7 @@ private fun TodayWidget(
     timetable: Timetable,
     timetableEnabled: Boolean,
     courses: List<TodayCourse>,
+    finished: Boolean,
     colSpan: Int,
     rowSpan: Int,
     onClick: () -> Unit,
@@ -994,7 +1015,10 @@ private fun TodayWidget(
             )
         } else if (courses.isEmpty()) {
             Spacer(Modifier.weight(1f))
-            Text("今天没有课", style = MaterialTheme.typography.bodyLarge)
+            Text(
+                text = if (finished) "今天的课已结束" else "今天没有课",
+                style = MaterialTheme.typography.bodyLarge,
+            )
             Text(
                 text = "查看课表",
                 style = MaterialTheme.typography.bodySmall,
@@ -1003,7 +1027,7 @@ private fun TodayWidget(
         } else if (!expanded) {
             Spacer(Modifier.weight(1f))
             Text(
-                text = "${courses.size} 节课",
+                text = "${courses.size} 节剩余",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
             )
