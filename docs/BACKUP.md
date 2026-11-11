@@ -1,3 +1,5 @@
+> 📘 本文是专题附录。**主开发文档：[开发文档.md](开发文档.md)**
+
 # 备份与回滚
 
 ## 2026-10-25 自动迭代前快照
@@ -175,6 +177,43 @@ git show backup/pre-iteration-2026-10-25:path/to/file
 - 包含 beta13-beta19 的全部功能：课表滑动/开学日期强调、插件应用内 JS 模块、Gitee 优先更新、启动自动检查与 48 小时忽略、壁纸裁切与淡入淡出、热水组件适配、主页拖动吸附与不同尺寸交换。
 - 正式版发布：GitHub `v1.0.0`、Gitee `v1.0.0`。
 
+## 2026-11-11 全插件架构改造前快照
+
+- 代码快照：`D:\file\code\project\OpeningSchool-backup-2026-11-11\source-883e057.zip`（306 个条目，SHA-256 `1f3d99438be3be1763daca985df1ba1700605130a044c8b51ffc937f6ec0b1f8`）
+- 可回滚标签：`backup/pre-full-plugin-2026-11-11`（指向 `883e057`，即 v1.0.0）
+- 签名备份：同目录下的 `openschool-release.jks` 与 `keystore.properties`
+- 基线状态：工作区干净，`main` 与 `origin/main` 同步于 `883e057`
+
+## 2026-11-11 1.1.0 全插件架构（Plugin API v2）
+
+- 版本：`1.1.0`（versionCode 22），**仅本地构建，尚未发布**；`update.json` 仍指向 1.0.0。
+- 新增 `app` 模块类型（`apiVersion: 2`）：`apply(ctx)` / `dispose()` 常驻生命周期，v1 `web-importer` 完全兼容、两类共存。
+- ctx 能力：`storage`（命名空间 KV）、`events`（异步总线 + `action:<name>`）、`ui.homeWidget`（主页组件插槽）、`ui.screen`（独立页面插槽）、`services`（跨插件同步调用）、`dispose`。
+- 声明式视图：白名单 JSON 树（column/row/card/text/icon/button/spacer/divider），宿主 `PluginViewRenderer` 原生渲染，超限字段降级而非报错。
+- 插件树：manifest `requires`；`PluginDependencyGraph` 拓扑排序、缺失依赖阻塞下游、循环整体阻塞。
+- 共享 Rhino 沙箱 `RhinoSandbox`（v1/v2 共用，嵌套执行继承时间预算）。
+- 插件页「已安装」新增模块分区：类型标签、依赖、运行状态（运行中/待启动/阻塞原因/出错）、启停开关、移除；有页面的模块整行可点进入。
+- 示例：`demo.app` 1.1.0（主页计数器 + 独立页面 + 事件 + 存储），源码在 `market/samples/demo-app/`。
+- 文档：新增 `docs/PLUGIN_ARCHITECTURE.md`，`PLUGIN_DEVELOPMENT.md` 增加 v2 章节并重排编号。
+- **原生插件（APK）**：新增 `:core:plugin-sdk`（`HostPlugin` / `PluginHost` / `NativeScreen` / `NativeWidget`，只用 Android 框架类型）；宿主用 `<queries>` + 标记 action 发现，`DexClassLoader` 加载入口类，原生 View 经 `AndroidView` 嵌入；插件页新增「原生插件」分区（启用/停用/状态/页面数与组件数），有页面的插件可点入（多页面标签栏）；组件并入主页画布。
+- **原生插件免安装形态**：新增 `type: "native"` dex 模块（`plugin.json` + `classes.dex`，`entryClass` 指定入口），宿主用 `InMemoryDexClassLoader` 加载（API 26+），**不装 APK、不产生桌面图标或应用列表条目**；启用/停用复用模块存储。示例 `demo.native`（6.4 KB）已在市场目录。APK 形态保留，定位为「需要自有资源/Activity」的进阶选项。
+- 插件页筛选：`模块` 分区只列 `app` 类型，`native` 类型统一进原生分区，避免重复与两个开关。
+- 新增示例插件 `:plugin:sample-native`（原生页面 + 组件 + 存储 + 事件订阅），文档 `docs/NATIVE_PLUGIN_SDK.md`。
+- 安全：原生插件同进程、同 UID、无沙箱，属可信代码；宿主只保证不自动下载与执行、需用户显式启用，已在文档中明确。
+- 验证：`gradlew test` **87 项全绿**（新增 31 项 JS 运行时、8 项原生插件契约、5 项原生 dex 清单与包结构校验、以及原有回归）；`assembleDebug` 与 `assembleRelease`（R8 + 资源压缩）均通过。
+- 未做：模拟器/真机 UI 运行验证（本机模拟器此前不稳定），发布上传与 `update.json` 更新待确认。
+
+## 2026-11-12 1.1.4 原生插件可用性修复（正式发布）
+
+- 版本：`1.1.4`（versionCode 26），APK 3,914,469 B，SHA-256 `a02baf7626d4d148d15d8fab15f97f52daec43c35d4d9fd1d8a57960a212726a`。
+- **根因修复**：`NativePluginApi.VERSION` 由 `1` 升到 `2`。校历插件声明 `apiVersion: 2`，旧宿主按 `2 in 1..1` 判为不兼容，插件从未加载，表现为「点不进去」。
+- 插件行永远可点：无页面 / 加载失败 / 已停用都会进入状态卡，显示具体错误、id、版本与来源，并提供「重试加载」。
+- `NativePluginRuntime` 的全局 `lastLoadError` 改为按插件 id 记录，多插件同时失败不再张冠李戴；`PluginInfo` 增加 `source` / `sourceLabel`，列表区分 APK 与「模块」。
+- `PluginRuntime` 过滤 `type == native`，修掉 JS 运行时把 `classes.dex` 当脚本解析（日志特征 `illegal character: … (classes.dex#2)`）。
+- 回归用例 `PluginRuntimeTest.ignoresNativeModules`（已验证无修复时失败、有修复时通过）。
+- 文档：新增中文主文档 `docs/开发文档.md`（唯一入口），README 顶部显著链接；`PLUGIN_ARCHITECTURE.md` / `PLUGIN_DEVELOPMENT.md` 修正 `apiVersion 2` 接受 `app`/`native` 的描述；7 份专题文档顶部加「主开发文档」指引。
+- 构建产物：`app/build/outputs/apk/release/app-release.apk`；发布后 `update.json` 指向 `v1.1.4`。
+
 ## 当前验证记录
 
 - 全部单元测试通过（新增华农课表/成绩解析、版本比较回归测试）。
@@ -184,3 +223,5 @@ git show backup/pre-iteration-2026-10-25:path/to/file
 - `update.json` 是应用内更新的清单（版本号、APK URL、fallbackApkUrl、SHA-256、大小）；发布新版本时同步更新 Gitee 与 GitHub 两份。
 - 已验证：多地区天气搜索与持久化、赞助二维码、反馈跳转、日志导出、主页长按拖动换位、今日课程时间左对齐、插件市场搜索/分类/并行批量下载/SHA 校验、外部适配器发现与导入。
 - 插件市场安装仍由系统确认；未知来源权限需要用户手动允许。
+- 1.1.4 已在 AVD `Medium_Phone_API_37.0`（Android 17）完成端到端验证：校历插件（Gitee 下载 11055 B + SHA 校验）与 `demo.native`（离线 assets 目录）均能安装、启动并渲染页面；主页「教学周」组件正常；APK 形态 `sample-native` 经 `DexClassLoader` 加载成功；破坏 `classes.dex` 后行内出现「重试」，状态卡显示真实错误并可重试恢复；`gradlew test` 全绿。
+- 已知遗留：Gitee `market/catalog.json` 仍只有 2 个条目（校历、网页导入示例），本地 4 条目版本（含 `demo.app`、`demo.native`）尚未推送。

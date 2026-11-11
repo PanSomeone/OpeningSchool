@@ -24,10 +24,18 @@ data class ModuleManifest(
     val startUrl: String = "",
     val iconKey: String = "extension",
     val author: String = "",
+    /** API v2: ids of other modules this one depends on (plugin tree). */
+    val requires: List<String> = emptyList(),
+    /** API v2 `native` modules: the class implementing HostPlugin. */
+    val entryClass: String = "",
 ) {
     companion object {
         const val TYPE_WEB_IMPORTER = "web-importer"
-        const val SUPPORTED_API = 1
+        const val TYPE_APP = "app"
+        const val TYPE_NATIVE = "native"
+        const val API_V1 = 1
+        const val API_V2 = 2
+        const val SUPPORTED_API = API_V2
     }
 }
 
@@ -176,21 +184,7 @@ class PluginModuleStore(context: Context) {
     }
 
     private fun validate(manifest: ModuleManifest) {
-        check(ID_PATTERN.matches(manifest.id)) { "模块 id 不合法" }
-        check(manifest.name.isNotBlank()) { "模块名称不能为空" }
-        check(manifest.apiVersion == ModuleManifest.SUPPORTED_API) {
-            "模块 API ${manifest.apiVersion} 不受支持"
-        }
-        check(manifest.type == ModuleManifest.TYPE_WEB_IMPORTER) {
-            "暂不支持模块类型 ${manifest.type}"
-        }
-        check(
-            manifest.startUrl.startsWith("https://") ||
-                manifest.startUrl.startsWith("http://"),
-        ) { "模块 startUrl 必须是 http(s) 地址" }
-        check(!manifest.entry.startsWith("/") && !manifest.entry.contains("..")) {
-            "模块入口路径不合法"
-        }
+        ModuleManifestValidator.validate(manifest)
     }
 
     private fun isValid(manifest: ModuleManifest): Boolean = runCatching {
@@ -224,7 +218,6 @@ class PluginModuleStore(context: Context) {
         const val MAX_MANIFEST_BYTES = 64L * 1024
         const val MAX_MODULE_BYTES = 8L * 1024 * 1024
         const val MAX_FILES = 200
-        val ID_PATTERN = Regex("^[a-z0-9][a-z0-9._-]{1,63}$")
         val json = Json { ignoreUnknownKeys = true; encodeDefaults = true }
     }
 }

@@ -14,10 +14,7 @@ import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.json.Json
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
-import org.mozilla.javascript.BaseFunction
-import org.mozilla.javascript.ClassShutter
 import org.mozilla.javascript.Context
-import org.mozilla.javascript.ContextFactory
 import org.mozilla.javascript.EvaluatorException
 import org.mozilla.javascript.Function
 import org.mozilla.javascript.NativeJSON
@@ -60,9 +57,7 @@ object ModuleRuntime {
     }
 
     private fun execute(script: String, name: String, pages: List<String>): String {
-        deadline.set(System.currentTimeMillis() + MAX_SCRIPT_MILLIS)
-        val context = factory.enterContext()
-        try {
+        return RhinoSandbox.run(name, MAX_SCRIPT_MILLIS) { context ->
             val scope = context.initStandardObjects()
             ScriptableObject.putProperty(scope, "host", moduleHostScope(ModuleHost(pages)))
             context.evaluateString(scope, script, name, 1, null)
@@ -71,16 +66,13 @@ object ModuleRuntime {
                 throw EvaluatorException("模块必须导出 parse() 函数")
             }
             val result = parse.call(context, scope, scope, emptyArray())
-            return when (result) {
+            return@run when (result) {
                 null -> "null"
                 is CharSequence -> result.toString()
                 else -> NativeJSON.stringify(context, scope, result, null, null)
                     ?.toString()
                     ?: "null"
             }
-        } finally {
-            deadline.remove()
-            Context.exit()
         }
     }
 
@@ -174,56 +166,26 @@ object ModuleRuntime {
     }
 
     private val json = Json { ignoreUnknownKeys = true; isLenient = true }
-    private val deadline = ThreadLocal<Long>()
-
-    private val factory = object : ContextFactory() {
-        override fun makeContext(): Context {
-            val context = super.makeContext()
-            context.optimizationLevel = -1
-            context.languageVersion = Context.VERSION_ES6
-            context.setClassShutter(ClassShutter { false })
-            context.setInstructionObserverThreshold(50_000)
-            return context
-        }
-
-        override fun observeInstructionCount(context: Context, instructionCount: Int) {
-            val limit = deadline.get() ?: return
-            if (System.currentTimeMillis() > limit) {
-                throw EvaluatorException("模块脚本执行超时")
-            }
-        }
-    }
 
     private fun moduleHostScope(api: ModuleHost): ScriptableObject {
         val host = NativeObject()
-        fun add(name: String, block: (Array<out Any?>) -> Any?) {
-            host.put(name, host, HostFunction(block))
+        fun add(name: String, block: (Context, Array<out Any?>) -> Any?) {
+            host.jsFunction(name, block)
         }
-        add("pageCount") { api.pageCount() }
-        add("page") { args -> api.page(args.intAt(0)) }
-        add("text") { args -> api.text(args.intAt(0), args.stringAt(1)) }
-        add("texts") { args -> api.texts(args.intAt(0), args.stringAt(1)) }
-        add("attr") { args ->
+        add("pageCount") { _, _ -> api.pageCount() }
+        add("page") { _, args -> api.page(args.intAt(0)) }
+        add("text") { _, args -> api.text(args.intAt(0), args.stringAt(1)) }
+        add("texts") { _, args -> api.texts(args.intAt(0), args.stringAt(1)) }
+        add("attr") { _, args ->
             api.attr(args.intAt(0), args.stringAt(1), args.stringAt(2))
         }
-        add("attrs") { args ->
+        add("attrs") { _, args ->
             api.attrs(args.intAt(0), args.stringAt(1), args.stringAt(2))
         }
-        add("html") { args -> api.html(args.intAt(0), args.stringAt(1)) }
-        add("count") { args -> api.count(args.intAt(0), args.stringAt(1)) }
-        add("log") { args -> api.log(args.stringAt(0)) }
+        add("html") { _, args -> api.html(args.intAt(0), args.stringAt(1)) }
+        add("count") { _, args -> api.count(args.intAt(0), args.stringAt(1)) }
+        add("log") { _, args -> api.log(args.stringAt(0)) }
         return host
-    }
-
-    private class HostFunction(
-        private val block: (Array<out Any?>) -> Any?,
-    ) : BaseFunction() {
-        override fun call(
-            cx: Context?,
-            scope: Scriptable?,
-            thisObj: Scriptable?,
-            args: Array<out Any?>,
-        ): Any? = block(args)
     }
 
     private fun Array<out Any?>.intAt(index: Int): Int =

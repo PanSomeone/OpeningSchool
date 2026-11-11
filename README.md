@@ -1,8 +1,12 @@
 # 开源大学（OpeningSchool）
 
-> 插件开发、打包、审核与上架：[docs/PLUGIN_DEVELOPMENT.md](docs/PLUGIN_DEVELOPMENT.md)
+## 📘 开发文档：[docs/开发文档.md](docs/开发文档.md)
 
-> 当前正式版：`1.0.0`（versionCode 21） · [下载与更新](https://gitee.com/PanSomeone/OpeningSchool/releases)
+**要改代码、写插件或打包发布，先看这一份。** 内含工程结构、三种插件形态、原生 SDK、市场协议与发布流程。
+
+> 专题文档：[插件架构](docs/PLUGIN_ARCHITECTURE.md) · [网页导入模块](docs/PLUGIN_DEVELOPMENT.md) · [原生插件 SDK](docs/NATIVE_PLUGIN_SDK.md) · [适配器 API](docs/ADAPTER_API.md) · [插件市场](docs/PLUGIN_MARKET.md) · [备份与版本](docs/BACKUP.md)
+
+> 当前正式版：`1.1.4`（versionCode 26） · [下载与更新](https://gitee.com/PanSomeone/OpeningSchool/releases)
 
 功能说明
 

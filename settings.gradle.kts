@@ -1,4 +1,4 @@
-pluginManagement {
+﻿pluginManagement {
     repositories {
         google {
             content {
@@ -27,6 +27,7 @@ include(":core:model")
 include(":core:data")
 include(":core:ui")
 include(":core:plugin-api")
+include(":core:plugin-sdk")
 include(":feature:timetable")
 include(":feature:home")
 include(":feature:settings")
@@ -37,3 +38,6 @@ include(":plugin:scores")
 
 include(":adapter:zhengfang-external")
 include(":adapter:sample-external")
+
+include(":plugin:sample-native")
+include(":plugin:calendar")

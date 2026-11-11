@@ -1,0 +1,12 @@
+{
+  "id": "hzau.calendar",
+  "name": "校历（华农 2026—2027-1）",
+  "description": "华中农业大学 2026—2027 学年第一学期校历：20 周教学周历、开学与假期、运动会、期中期末考试等关键日程，附主页「教学周」组件。",
+  "version": "1.0.0",
+  "apiVersion": 2,
+  "type": "native",
+  "entry": "classes.dex",
+  "entryClass": "com.openschedule.plugin.hzau.calendar.CalendarPlugin",
+  "iconKey": "date",
+  "author": "OpeningSchool"
+}

@@ -35,6 +35,7 @@ kotlin {
 dependencies {
     api(project(":core:model"))
     api(project(":core:plugin-api"))
+    api(project(":core:plugin-sdk"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.kotlinx.serialization.json)

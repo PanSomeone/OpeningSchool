@@ -1,3 +1,5 @@
+> 📘 本文是专题附录。**主开发文档：[开发文档.md](开发文档.md)**
+
 # 插件市场目录与下载
 
 插件市场读取 `market/catalog.json`。默认先读 Gitee 的 `main` 分支，失败时回退 GitHub raw；离线时使用 APK 内置的 `feature/plugins/src/main/assets/market_catalog.json`。

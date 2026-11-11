@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <application
+        android:allowBackup="false"
+        android:hasCode="true"
+        android:label="@string/plugin_name">
+
+        <!-- Declares the plugin entry class to the host. -->
+        <meta-data
+            android:name="com.openschedule.plugin.ENTRY"
+            android:value="com.openschedule.plugin.sample.viewbased.SampleNativePlugin" />
+        <meta-data
+            android:name="com.openschedule.plugin.API"
+            android:value="1" />
+        <meta-data
+            android:name="com.openschedule.plugin.ICON"
+            android:value="science" />
+
+        <!-- Marker used for discovery; the host only reads the manifest and never starts it. -->
+        <service
+            android:name=".MarkerService"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.openschedule.plugin.NATIVE" />
+            </intent-filter>
+        </service>
+
+    </application>
+
+</manifest>

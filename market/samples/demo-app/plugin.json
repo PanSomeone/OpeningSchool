@@ -1,0 +1,11 @@
+{
+  "id": "demo.app",
+  "name": "示例应用模块",
+  "description": "全插件架构 API v2 示例：主页计数器小组件、独立页面、点击事件、本地存储与生命周期。",
+  "version": "1.1.0",
+  "apiVersion": 2,
+  "type": "app",
+  "entry": "main.js",
+  "iconKey": "star",
+  "author": "OpeningSchool"
+}

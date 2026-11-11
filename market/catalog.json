@@ -2,6 +2,18 @@
   "version": 2,
   "plugins": [
     {
+      "id": "hzau.calendar",
+      "name": "校历（华农 2026—2027-1）",
+      "description": "华中农业大学 2026—2027 学年第一学期校历：20 周教学周历、开学与假期、运动会、期中期末考试等关键日程，附主页「教学周」组件。",
+      "category": "校园信息",
+      "version": "1.0.0",
+      "url": "https://gitee.com/PanSomeone/OpeningSchool/raw/main/plugins/hzau.calendar-1.0.0.osplugin",
+      "sha256": "760a8302fd688f9292805a0fd859d8c2a234ab417446c4d89ac8456c417e432f",
+      "sizeBytes": 11055,
+      "iconKey": "date",
+      "type": "module"
+    },
+    {
       "id": "demo.web-importer",
       "name": "示例网页导入模块",
       "description": "应用内 JS 模块示例：无需安装 APK，添加后从「导入课表」选择它即可体验网页解析。",
@@ -11,6 +23,30 @@
       "sha256": "66950a683acb5e3485d65e71c75876a488302551722f688671d75b520e176c97",
       "sizeBytes": 815,
       "iconKey": "extension",
+      "type": "module"
+    },
+    {
+      "id": "demo.app",
+      "name": "示例应用模块",
+      "description": "全插件架构 API v2 示例：主页计数器小组件、独立页面、点击事件、本地存储与生命周期。",
+      "category": "工具",
+      "version": "1.1.0",
+      "url": "asset://demo-app.osplugin",
+      "sha256": "5f13d0194bd6f5fd38af82f75574d66d1726d0e0b7752bfe51cb21ef3ac358e4",
+      "sizeBytes": 1271,
+      "iconKey": "star",
+      "type": "module"
+    },
+    {
+      "id": "demo.native",
+      "name": "示例原生插件",
+      "description": "原生 View 插件：打包为应用内 dex 模块，不安装 APK，不出现在桌面或系统应用列表。",
+      "category": "工具",
+      "version": "1.0.0",
+      "url": "asset://demo-native.osplugin",
+      "sha256": "7a90cd61620b2b5735c687a8341cb53338b0ccc9daa462df2b3f07234391f84c",
+      "sizeBytes": 6407,
+      "iconKey": "science",
       "type": "module"
     }
   ]

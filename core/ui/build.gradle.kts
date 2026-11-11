@@ -31,6 +31,7 @@ kotlin {
 
 dependencies {
     api(project(":core:model"))
+    api(project(":core:plugin-api"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.activity.compose)

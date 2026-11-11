@@ -31,11 +31,19 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -61,7 +69,10 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.openschedule.core.data.Announcement
+import com.openschedule.core.data.InstalledModule
 import com.openschedule.core.data.PluginModuleStore
+import com.openschedule.core.data.NativePluginRuntime
+import com.openschedule.core.data.PluginRuntime
 import com.openschedule.core.data.SettingsStore
 import com.openschedule.core.model.MAX_NAV_SLOTS
 import com.openschedule.core.model.NavSlot
@@ -69,7 +80,11 @@ import com.openschedule.core.plugin.PluginDestination
 import com.openschedule.core.ui.LocalFloatingNavSpace
 import com.openschedule.core.ui.LocalIsDarkTheme
 import com.openschedule.core.ui.LocalWallpaperActive
+import com.openschedule.core.ui.NativePluginView
+import com.openschedule.core.ui.NativePluginWidgetView
 import com.openschedule.core.ui.NavIcons
+import com.openschedule.core.ui.PluginViewContent
+import com.openschedule.core.ui.ScreenHeader
 import com.openschedule.feature.home.HomeScreen
 import com.openschedule.feature.home.HomeShortcut
 import com.openschedule.feature.home.HomeViewModel
@@ -121,17 +136,36 @@ fun AppShell(graph: AppGraph) {
         updateViewModel.autoCheck()
     }
 
+    // Host event bridge: plugins can subscribe to timetable changes.
+    LaunchedEffect(Unit) {
+        graph.timetableStore.timetable.collect {
+            graph.pluginRuntime.emitHostEvent("timetable.updated")
+            graph.nativePlugins.emitHostEvent("timetable.updated")
+        }
+    }
+
+    val pluginStates by graph.pluginRuntime.states.collectAsStateWithLifecycle()
+    val moduleWidgets by graph.pluginRuntime.homeWidgets.collectAsStateWithLifecycle()
+    val nativePlugins by graph.nativePlugins.plugins.collectAsStateWithLifecycle()
+
     val homeViewModel = rememberedViewModel(HomeViewModel::class.java, "home") {
         HomeViewModel(graph.timetableStore, graph.weatherStore)
     }
     var selectedId by rememberSaveable { mutableStateOf("home") }
     var pluginSettingsId by rememberSaveable { mutableStateOf<String?>(null) }
     var wallpaperOpen by rememberSaveable { mutableStateOf(false) }
+    var openModuleId by rememberSaveable { mutableStateOf<String?>(null) }
+    var openNativeId by rememberSaveable { mutableStateOf<String?>(null) }
+
+    val moduleScreens by graph.pluginRuntime.screens.collectAsStateWithLifecycle()
+    val openModuleScreen = openModuleId?.let { moduleScreens[it] }
 
     val openDestination: (String) -> Unit = { id ->
         selectedId = id
         pluginSettingsId = null
         wallpaperOpen = false
+        openModuleId = null
+        openNativeId = null
     }
 
     val homeShortcuts = listOf(
@@ -181,7 +215,46 @@ fun AppShell(graph: AppGraph) {
                 )
             },
         ),
-    )
+    ) + moduleWidgets.map { widget ->
+        HomeWidgetSpec(
+            id = widget.widgetId,
+            title = widget.spec.title.ifBlank { "插件组件" },
+            iconKey = widget.spec.iconKey,
+            available = pluginStates[widget.pluginId]?.status == PluginRuntime.Status.Active,
+            content = { modifier ->
+                PluginViewContent(
+                    node = widget.spec.view,
+                    onAction = { action ->
+                        graph.pluginRuntime.dispatchAction(widget.pluginId, action)
+                    },
+                    modifier = modifier,
+                )
+            },
+        )
+    } + nativePlugins
+        .filter { it.status == NativePluginRuntime.Status.Active }
+        .flatMap { plugin ->
+            plugin.widgets.map { widget ->
+                HomeWidgetSpec(
+                    id = plugin.widgetType(widget.id),
+                    title = widget.title,
+                    iconKey = widget.iconKey,
+                    available = true,
+                    content = { modifier ->
+                        NativePluginWidgetView(
+                            factory = {
+                                graph.nativePlugins.createWidgetView(
+                                    plugin.id,
+                                    widget.id,
+                                    context,
+                                )
+                            },
+                            modifier = modifier,
+                        )
+                    },
+                )
+            }
+        }
 
     val destinations = listOf(
         PluginDestination(
@@ -261,11 +334,21 @@ fun AppShell(graph: AppGraph) {
                     viewModel = viewModel,
                     settingsStore = graph.settingsStore,
                     moduleStore = graph.moduleStore,
+                    pluginStates = pluginStates,
                     onOpenPlugin = { id ->
                         selectedId = id
                         pluginSettingsId = null
                         wallpaperOpen = false
+                        openModuleId = null
                     },
+                    onOpenModule = { id -> openModuleId = id },
+                    onCanOpenModule = { id -> moduleScreens.containsKey(id) },
+                    nativePlugins = nativePlugins,
+                    onToggleNative = { id, enabled ->
+                        graph.nativePlugins.setEnabled(id, enabled)
+                    },
+                    onOpenNative = { id -> openNativeId = id },
+                    onRefreshNative = { graph.nativePlugins.refresh() },
                     onOpenPluginSettings = { pluginSettingsId = it },
                     onOpenSettings = {
                         selectedId = "settings"
@@ -349,6 +432,12 @@ fun AppShell(graph: AppGraph) {
     BackHandler(enabled = pluginSettingsId != null) {
         pluginSettingsId = null
     }
+    BackHandler(enabled = openModuleId != null) {
+        openModuleId = null
+    }
+    BackHandler(enabled = openNativeId != null) {
+        openNativeId = null
+    }
     BackHandler(
         enabled = pluginSettingsId == null &&
             navSlots.none { it.id == active.id } &&
@@ -390,6 +479,33 @@ fun AppShell(graph: AppGraph) {
                         .padding(innerPadding),
                 ) {
                     when {
+                        openNativeId != null -> {
+                            val plugin = nativePlugins.firstOrNull { it.id == openNativeId }
+                            NativePluginScreen(
+                                plugin = plugin,
+                                onCreateView = { screenId ->
+                                    graph.nativePlugins.createScreenView(
+                                        openNativeId!!,
+                                        screenId,
+                                        context,
+                                    )
+                                },
+                                onRetry = { graph.nativePlugins.refresh() },
+                                onBack = { openNativeId = null },
+                            )
+                        }
+
+                        openModuleId != null -> {
+                            ModuleScreen(
+                                pluginId = openModuleId!!,
+                                screen = openModuleScreen?.screen,
+                                onAction = { action ->
+                                    graph.pluginRuntime.dispatchAction(openModuleId!!, action)
+                                },
+                                onBack = { openModuleId = null },
+                            )
+                        }
+
                         wallpaperOpen -> {
                             val viewModel = rememberedViewModel(
                                 SettingsViewModel::class.java,
@@ -464,15 +580,169 @@ fun AppShell(graph: AppGraph) {
 }
 
 @Composable
+private fun NativePluginScreen(
+    plugin: NativePluginRuntime.PluginInfo?,
+    onCreateView: (String) -> android.view.View?,
+    onRetry: () -> Unit,
+    onBack: () -> Unit,
+) {
+    val screens = plugin?.screens.orEmpty()
+    var selected by rememberSaveable(plugin?.id) { mutableStateOf(0) }
+    val index = selected.coerceIn(0, (screens.size - 1).coerceAtLeast(0))
+
+    Column(modifier = Modifier.fillMaxSize()) {
+        ScreenHeader(
+            title = plugin?.label ?: "原生插件",
+            leading = {
+                IconButton(onClick = onBack) {
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
+                }
+            },
+        )
+        if (screens.size > 1) {
+            TabRow(selectedTabIndex = index) {
+                screens.forEachIndexed { i, screen ->
+                    Tab(
+                        selected = i == index,
+                        onClick = { selected = i },
+                        text = { Text(screen.title, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+                    )
+                }
+            }
+        }
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .padding(horizontal = 16.dp)
+                .padding(top = 12.dp, bottom = LocalFloatingNavSpace.current + 24.dp),
+        ) {
+            if (screens.isEmpty()) {
+                Surface(
+                    shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
+                    color = MaterialTheme.colorScheme.surface,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text(
+                            text = when (plugin?.status) {
+                                null -> "插件不存在"
+                                NativePluginRuntime.Status.Active -> "该插件没有注册页面"
+                                NativePluginRuntime.Status.Disabled -> "插件已停用"
+                                NativePluginRuntime.Status.Incompatible -> "插件与当前应用版本不兼容"
+                                NativePluginRuntime.Status.Error -> "插件加载失败"
+                            },
+                            style = MaterialTheme.typography.titleSmall,
+                        )
+                        if (plugin != null) {
+                            if (plugin.message.isNotBlank()) {
+                                Text(
+                                    text = plugin.message,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.error,
+                                    modifier = Modifier.padding(top = 6.dp),
+                                )
+                            }
+                            Text(
+                                text = "${plugin.id} · v${plugin.version} · 来源：${plugin.sourceLabel}",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(top = 8.dp),
+                            )
+                        }
+                        Text(
+                            text = "可在上一页用开关停用/启用，或从插件市场重新下载。",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(top = 10.dp),
+                        )
+                        if (plugin?.status == NativePluginRuntime.Status.Error) {
+                            Button(
+                                onClick = onRetry,
+                                modifier = Modifier.padding(top = 10.dp),
+                            ) {
+                                Text("重试加载")
+                            }
+                        }
+                    }
+                }
+            } else {
+                // Keyed on the screen id so switching tabs rebuilds a fresh view.
+                androidx.compose.runtime.key(screens[index].id) {
+                    NativePluginView(
+                        factory = { onCreateView(screens[index].id) },
+                        modifier = Modifier.fillMaxSize(),
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ModuleScreen(
+    pluginId: String,
+    screen: com.openschedule.core.plugin.PluginScreen?,
+    onAction: (String) -> Unit,
+    onBack: () -> Unit,
+) {
+    Column(modifier = Modifier.fillMaxSize()) {
+        ScreenHeader(
+            title = screen?.title?.ifBlank { null } ?: "插件页面",
+            leading = {
+                IconButton(onClick = onBack) {
+                    Icon(
+                        Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "返回",
+                    )
+                }
+            },
+        )
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 16.dp)
+                .padding(bottom = LocalFloatingNavSpace.current + 24.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            if (screen == null) {
+                Surface(
+                    shape = RoundedCornerShape(16.dp),
+                    color = MaterialTheme.colorScheme.surface,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text(
+                        text = "「$pluginId」没有提供页面。模块需要在运行时调用 ctx.ui.screen({...})。",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(16.dp),
+                    )
+                }
+            } else {
+                PluginViewContent(node = screen.view, onAction = onAction)
+            }
+        }
+    }
+}
+
+@Composable
 private fun PluginsRoute(
     viewModel: PluginsViewModel,
     settingsStore: SettingsStore,
     moduleStore: PluginModuleStore,
+    pluginStates: Map<String, PluginRuntime.PluginState>,
     onOpenPlugin: (String) -> Unit,
     onOpenPluginSettings: (String) -> Unit,
     onOpenSettings: () -> Unit,
+    onOpenModule: (String) -> Unit,
+    onCanOpenModule: (String) -> Boolean,
+    nativePlugins: List<NativePluginRuntime.PluginInfo>,
+    onToggleNative: (String, Boolean) -> Unit,
+    onOpenNative: (String) -> Unit,
+    onRefreshNative: () -> Unit,
 ) {
     val settings by settingsStore.settings.collectAsStateWithLifecycle()
+    val modules by moduleStore.modules.collectAsStateWithLifecycle()
     val catalog = listOf(
         Triple("timetable", "课程表", "课表、作息与导入") to "calendar",
         Triple("hotwater", "热水", "宿舍热水控制") to "water",
@@ -495,6 +765,8 @@ private fun PluginsRoute(
         viewModel = viewModel,
         plugins = plugins,
         moduleStore = moduleStore,
+        modules = modules,
+        moduleStates = pluginStates,
         onInstall = { id ->
             settingsStore.update { it.copy(disabledPlugins = it.disabledPlugins - id) }
         },
@@ -511,6 +783,12 @@ private fun PluginsRoute(
         onOpenPlugin = onOpenPlugin,
         onOpenPluginSettings = onOpenPluginSettings,
         onOpenSettings = onOpenSettings,
+        canOpenModule = onCanOpenModule,
+        onOpenModule = onOpenModule,
+        nativePlugins = nativePlugins,
+        onToggleNative = onToggleNative,
+        onOpenNative = onOpenNative,
+        onRefreshNative = onRefreshNative,
     )
 }
 

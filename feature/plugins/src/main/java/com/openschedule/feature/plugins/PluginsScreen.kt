@@ -45,6 +45,7 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -64,7 +65,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.openschedule.core.data.InstalledModule
+import com.openschedule.core.data.ModuleManifest
+import com.openschedule.core.data.NativePluginRuntime
+import com.openschedule.core.data.NativePluginSource
 import com.openschedule.core.data.PluginModuleStore
+import com.openschedule.core.data.PluginRuntime
 import com.openschedule.core.model.TimetableImporter
 import com.openschedule.core.ui.LocalFloatingNavSpace
 import com.openschedule.core.ui.NavIcons
@@ -93,9 +99,18 @@ fun PluginsScreen(
     onOpenPlugin: (String) -> Unit,
     onOpenPluginSettings: (String) -> Unit,
     onOpenSettings: () -> Unit,
+    modules: List<InstalledModule> = emptyList(),
+    moduleStates: Map<String, PluginRuntime.PluginState> = emptyMap(),
+    canOpenModule: (String) -> Boolean = { false },
+    onOpenModule: (String) -> Unit = {},
+    nativePlugins: List<NativePluginRuntime.PluginInfo> = emptyList(),
+    onToggleNative: (String, Boolean) -> Unit = { _, _ -> },
+    onOpenNative: (String) -> Unit = {},
+    onRefreshNative: () -> Unit = {},
 ) {
     var showMarket by remember { mutableStateOf(false) }
     var uninstalling by remember { mutableStateOf<BuiltInPluginUi?>(null) }
+    var removingModule by remember { mutableStateOf<InstalledModule?>(null) }
     val importers by viewModel.importers.collectAsStateWithLifecycle()
     val loading by viewModel.loading.collectAsStateWithLifecycle()
 
@@ -115,6 +130,10 @@ fun PluginsScreen(
         )
     } else {
         val installed = plugins.filter { it.installed }
+        val installedModules = modules.filter {
+            it.manifest.apiVersion == ModuleManifest.API_V2 &&
+                it.manifest.type != ModuleManifest.TYPE_NATIVE
+        }
 
         Column(modifier = Modifier.fillMaxSize()) {
             ScreenHeader(title = "插件") {
@@ -139,7 +158,7 @@ fun PluginsScreen(
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)) {
-                        if (installed.isEmpty()) {
+                        if (installed.isEmpty() && installedModules.isEmpty()) {
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -166,9 +185,74 @@ fun PluginsScreen(
                                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                             }
                         }
+                        if (installedModules.isNotEmpty()) {
+                            if (installed.isNotEmpty()) {
+                                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                            }
+                            Text(
+                                text = "模块",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(top = 10.dp, bottom = 2.dp),
+                            )
+                        }
+                        installedModules.forEachIndexed { index, module ->
+                            InstalledModuleRow(
+                                module = module,
+                                state = moduleStates[module.manifest.id],
+                                openable = canOpenModule(module.manifest.id),
+                                onOpen = { onOpenModule(module.manifest.id) },
+                                onToggle = {
+                                    moduleStore.setEnabled(module.manifest.id, !module.enabled)
+                                },
+                                onRemove = { removingModule = module },
+                            )
+                            if (index != installedModules.lastIndex) {
+                                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                            }
+                        }
                     }
                 }
 
+                SectionTitle("原生插件")
+                Surface(
+                    shape = RoundedCornerShape(16.dp),
+                    color = MaterialTheme.colorScheme.surface,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)) {
+                        if (nativePlugins.isEmpty()) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 14.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Text(
+                                    text = "未发现原生插件。安装插件 APK 或从插件市场添加模块后点按刷新。",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.weight(1f),
+                                )
+                                TextButton(onClick = onRefreshNative) { Text("刷新") }
+                            }
+                        }
+                        nativePlugins.forEachIndexed { index, plugin ->
+                            NativePluginRow(
+                                plugin = plugin,
+                                onOpen = { onOpenNative(plugin.id) },
+                                onToggle = { onToggleNative(plugin.id, !plugin.enabled) },
+                                onRetry = onRefreshNative,
+                            )
+                            if (index != nativePlugins.lastIndex) {
+                                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                            }
+                        }
+                        if (nativePlugins.isNotEmpty()) {
+                            TextButton(onClick = onRefreshNative) { Text("重新扫描已安装插件") }
+                        }
+                    }
+                }
             }
         }
     }
@@ -186,6 +270,23 @@ fun PluginsScreen(
             },
             dismissButton = {
                 TextButton(onClick = { uninstalling = null }) { Text("取消") }
+            },
+        )
+    }
+
+    removingModule?.let { module ->
+        AlertDialog(
+            onDismissRequest = { removingModule = null },
+            title = { Text("移除「${module.manifest.name}」？") },
+            text = { Text("模块会从设备删除，主页组件与依赖它的模块会一起停止") },
+            confirmButton = {
+                TextButton(onClick = {
+                    moduleStore.remove(module.manifest.id)
+                    removingModule = null
+                }) { Text("移除", color = MaterialTheme.colorScheme.error) }
+            },
+            dismissButton = {
+                TextButton(onClick = { removingModule = null }) { Text("取消") }
             },
         )
     }
@@ -291,6 +392,186 @@ private fun PluginInstalledRow(
                 modifier = Modifier.size(20.dp),
             )
         }
+    }
+}
+
+@Composable
+private fun InstalledModuleRow(
+    module: InstalledModule,
+    state: PluginRuntime.PluginState?,
+    openable: Boolean,
+    onOpen: () -> Unit,
+    onToggle: () -> Unit,
+    onRemove: () -> Unit,
+) {
+    val typeLabel = if (module.manifest.type == ModuleManifest.TYPE_APP) "应用模块" else "导入模块"
+    val statusText = when {
+        !module.enabled -> "已停用"
+        state == null -> "待启动"
+        state.status == PluginRuntime.Status.Active -> "运行中"
+        state.status == PluginRuntime.Status.Blocked -> state.message
+        state.status == PluginRuntime.Status.Error -> "出错：${state.message}"
+        state.status == PluginRuntime.Status.Loading -> "启动中"
+        else -> ""
+    }
+    val statusColor = when {
+        !module.enabled || state?.status == PluginRuntime.Status.Blocked ->
+            MaterialTheme.colorScheme.onSurfaceVariant
+
+        state?.status == PluginRuntime.Status.Error -> MaterialTheme.colorScheme.error
+        state?.status == PluginRuntime.Status.Active -> MaterialTheme.colorScheme.primary
+        else -> MaterialTheme.colorScheme.onSurfaceVariant
+    }
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .let { base ->
+                if (openable) base.clickable(onClick = onOpen) else base
+            }
+            .padding(vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        PluginIcon(module.manifest.iconKey)
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .padding(start = 12.dp),
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(module.manifest.name, style = MaterialTheme.typography.bodyLarge)
+                Spacer(Modifier.size(8.dp))
+                Tag(typeLabel)
+                if (module.manifest.version.isNotBlank() && module.manifest.version != "1.0.0") {
+                    Spacer(Modifier.size(4.dp))
+                    Text(
+                        module.manifest.version,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+            if (module.manifest.requires.isNotEmpty()) {
+                Text(
+                    text = "依赖：${module.manifest.requires.joinToString("、")}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            Text(
+                text = statusText,
+                style = MaterialTheme.typography.bodySmall,
+                color = statusColor,
+            )
+            if (openable) {
+                Text(
+                    text = "点按进入",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(top = 2.dp),
+                )
+            }
+        }
+        Switch(
+            checked = module.enabled,
+            onCheckedChange = { onToggle() },
+        )
+        IconButton(onClick = onRemove) {
+            Icon(
+                Icons.Filled.Delete,
+                contentDescription = "移除模块",
+                tint = MaterialTheme.colorScheme.error,
+                modifier = Modifier.size(20.dp),
+            )
+        }
+    }
+}
+
+@Composable
+private fun NativePluginRow(
+    plugin: NativePluginRuntime.PluginInfo,
+    onOpen: () -> Unit,
+    onToggle: () -> Unit,
+    onRetry: () -> Unit,
+) {
+    val statusText = when (plugin.status) {
+        NativePluginRuntime.Status.Active -> "运行中"
+        NativePluginRuntime.Status.Disabled -> "已停用"
+        NativePluginRuntime.Status.Incompatible -> plugin.message
+        NativePluginRuntime.Status.Error -> if (plugin.message.isBlank()) "加载失败" else plugin.message
+    }
+    val statusColor = when (plugin.status) {
+        NativePluginRuntime.Status.Active -> MaterialTheme.colorScheme.primary
+        NativePluginRuntime.Status.Error -> MaterialTheme.colorScheme.error
+        else -> MaterialTheme.colorScheme.onSurfaceVariant
+    }
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onOpen)
+            .padding(vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        PluginIcon(plugin.iconKey)
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .padding(start = 12.dp),
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = plugin.label,
+                    style = MaterialTheme.typography.bodyLarge,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f, fill = false),
+                )
+                Spacer(Modifier.size(8.dp))
+                Tag(if (plugin.source == NativePluginSource.DEX_MODULE) "模块" else "APK")
+                if (plugin.version.isNotBlank()) {
+                    Spacer(Modifier.size(6.dp))
+                    Text(
+                        plugin.version,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                    )
+                }
+            }
+            Text(
+                text = statusText,
+                style = MaterialTheme.typography.bodySmall,
+                color = statusColor,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+            if (plugin.status == NativePluginRuntime.Status.Error) {
+                TextButton(
+                    onClick = onRetry,
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp),
+                    modifier = Modifier.padding(top = 2.dp),
+                ) {
+                    Text("重试", style = MaterialTheme.typography.labelMedium)
+                }
+            }
+            val slots = buildList {
+                if (plugin.screens.isNotEmpty()) add("${plugin.screens.size} 个页面")
+                if (plugin.widgets.isNotEmpty()) add("${plugin.widgets.size} 个组件")
+            }
+            if (slots.isNotEmpty()) {
+                Text(
+                    text = slots.joinToString(" · "),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            Text(
+                text = if (plugin.screens.isNotEmpty()) "点按进入" else "点按查看状态",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(top = 2.dp),
+            )
+        }
+        Switch(checked = plugin.enabled, onCheckedChange = { onToggle() })
     }
 }
 

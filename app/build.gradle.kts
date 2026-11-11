@@ -1,4 +1,4 @@
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+﻿import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import java.io.FileInputStream
 import java.util.Properties
 
@@ -21,8 +21,8 @@ android {
         applicationId = "com.openschedule"
         minSdk = 26
         targetSdk = 37
-        versionCode = 21
-        versionName = "1.0.0"
+        versionCode = 26
+        versionName = "1.1.4"
     }
 
     signingConfigs {
@@ -60,6 +60,7 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 

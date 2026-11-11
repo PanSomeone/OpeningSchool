@@ -1,0 +1,12 @@
+{
+  "id": "demo.native",
+  "name": "示例原生插件",
+  "description": "原生 View 插件示例：打包为应用内 dex 模块，不安装 APK、不出现在桌面或应用列表。",
+  "version": "1.0.0",
+  "apiVersion": 2,
+  "type": "native",
+  "entry": "classes.dex",
+  "entryClass": "com.openschedule.plugin.sample.viewbased.SampleNativePlugin",
+  "iconKey": "science",
+  "author": "OpeningSchool"
+}
